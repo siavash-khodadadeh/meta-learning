@@ -1,6 +1,8 @@
+import os
+
 import tensorflow as tf
 
-from meta_layers import conv2d, dense
+from meta_layers import conv2d, dense, conv3d
 
 
 class NeuralNetwork(object):
@@ -108,6 +110,200 @@ class NeuralNetwork(object):
             )
 
 
+class C3DNetwork(object):
+    def __init__(self, input_layer, weights=None):
+        if weights is None:
+            self.conv1 = tf.layers.conv3d(
+                input_layer,
+                64,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv1',
+            )
+            self.maxpool1 = tf.layers.max_pooling3d(self.conv1, pool_size=(1, 2, 2), strides=(1, 2, 2), padding='SAME')
+
+            self.conv2 = tf.layers.conv3d(
+                self.maxpool1,
+                128,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv2',
+            )
+            self.maxpool2 = tf.layers.max_pooling3d(self.conv2, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            self.conv3a = tf.layers.conv3d(
+                self.maxpool2,
+                256,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv3a',
+            )
+            self.conv3b = tf.layers.conv3d(
+                self.conv3a,
+                256,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv3b',
+            )
+            self.maxpool3 = tf.layers.max_pooling3d(self.conv3b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            self.conv4a = tf.layers.conv3d(
+                self.maxpool3,
+                512,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv4a',
+            )
+            self.conv4b = tf.layers.conv3d(
+                self.conv4a,
+                512,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv4b',
+            )
+            self.maxpool4 = tf.layers.max_pooling3d(self.conv4b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            self.conv5a = tf.layers.conv3d(
+                self.maxpool4,
+                512,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv5a',
+            )
+            self.conv5b = tf.layers.conv3d(
+                self.conv5a,
+                512,
+                kernel_size=(3, 3, 3),
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv5b',
+            )
+            self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            # self.transpose = tf.transpose(self.maxpool5, perm=[0, 1, 4, 2, 3])
+            self.flatten = tf.layers.flatten(self.maxpool5)
+            self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
+            self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
+            self.output = tf.layers.dense(self.dense2, 5, activation=None, name='dense3')
+        else:
+            self.conv1 = conv3d(
+                input_layer,
+                weights=weights['conv1/kernel:0'],
+                bias=weights['conv1/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv1'
+            )
+            self.maxpool1 = tf.layers.max_pooling3d(self.conv1, pool_size=(1, 2, 2), strides=(1, 2, 2))
+            self.conv2 = conv3d(
+                self.maxpool1,
+                weights=weights['conv2/kernel:0'],
+                bias=weights['conv2/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv2'
+            )
+            self.maxpool2 = tf.layers.max_pooling3d(self.conv2, pool_size=(2, 2, 2), strides=(2, 2, 2))
+            self.conv3a = conv3d(
+                self.maxpool2,
+                weights=weights['conv3a/kernel:0'],
+                bias=weights['conv3a/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv3a'
+            )
+            self.conv3b = conv3d(
+                self.conv3a,
+                weights=weights['conv3b/kernel:0'],
+                bias=weights['conv3b/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv3b'
+            )
+            self.maxpool3 = tf.layers.max_pooling3d(self.conv3b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            self.conv4a = conv3d(
+                self.maxpool3,
+                weights=weights['conv4a/kernel:0'],
+                bias=weights['conv4a/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv4a'
+            )
+            self.conv4b = conv3d(
+                self.conv4a,
+                weights=weights['conv4b/kernel:0'],
+                bias=weights['conv4b/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv4b'
+            )
+            self.maxpool4 = tf.layers.max_pooling3d(self.conv4b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+            self.conv5a = conv3d(
+                self.maxpool4,
+                weights=weights['conv5a/kernel:0'],
+                bias=weights['conv5a/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv5a'
+            )
+            self.conv5b = conv3d(
+                self.conv5a,
+                weights=weights['conv5b/kernel:0'],
+                bias=weights['conv5b/bias:0'],
+                strides=(1, 1, 1),
+                activation=tf.nn.relu,
+                padding='SAME',
+                name='conv5b'
+            )
+            self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
+
+            self.flatten = tf.layers.flatten(self.maxpool5)
+            self.dense = dense(
+                self.flatten,
+                weights=weights['dense1/kernel:0'],
+                bias=weights['dense1/bias:0'],
+                activation=tf.nn.relu,
+                name='dense1'
+            )
+            self.dense2 = dense(
+                self.dense,
+                weights=weights['dense2/kernel:0'],
+                bias=weights['dense2/bias:0'],
+                activation=tf.nn.relu,
+                name='dense2'
+            )
+            self.output = dense(
+                self.dense2,
+                weights=weights['dense3/kernel:0'],
+                bias=weights['dense3/bias:0'],
+                activation=None,
+                name='dense3'
+            )
+
+
 class ModelAgnosticMetaLearning(object):
     def __init__(
             self,
@@ -116,16 +312,16 @@ class ModelAgnosticMetaLearning(object):
             input_labels,
             input_validation,
             input_validation_labels,
-            meta_learn_rate=0.0001,
-            learning_rate=0.001,
+            log_dir,
+            meta_learn_rate=0.00001,
+            learning_rate=0.0001,
+            learn_the_loss_function=False,
+            train=True
     ):
-        self.input_data = tf.reshape(input_data, (-1, 28, 28, 1))
-        self.input_labels = tf.reshape(input_labels, (-1, 5))
-        self.input_validation = tf.reshape(input_validation, (-1, 28, 28, 1))
-        self.input_validation_labels = tf.reshape(input_validation_labels, (-1, 5))
-
-        tf.summary.image('train', tf.reshape(self.input_data, (-1, 28, 28, 1)), max_outputs=25)
-        tf.summary.image('validation', tf.reshape(self.input_validation, (-1, 28, 28, 1)), max_outputs=25)
+        self.input_data = input_data
+        self.input_labels = input_labels
+        self.input_validation = input_validation
+        self.input_validation_labels = input_validation_labels
 
         self.meta_learn_rate = meta_learn_rate
         self.learning_rate = learning_rate
@@ -137,21 +333,33 @@ class ModelAgnosticMetaLearning(object):
             model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
         with tf.variable_scope('loss'):
-            self.train_loss = self.loss_function(self.input_labels, self.model_out_train)
+            if learn_the_loss_function:
+                self.train_loss = self.neural_loss_function(self.input_labels, self.model_out_train)
+                self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
+            else:
+                self.train_loss = self.loss_function(self.input_labels, self.model_out_train)
+
             tf.summary.scalar('train_loss', self.train_loss)
 
         with tf.variable_scope('gradients'):
             optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-            self.inner_train_op = optimizer.minimize(self.train_loss)
+            self.inner_train_op = optimizer.minimize(self.train_loss, var_list=model_variables)
+
+            self.inner_train_ops = []
             self.grads = optimizer.compute_gradients(self.train_loss, var_list=model_variables)
 
             for grad_info in self.grads:
-                tf.summary.histogram(grad_info[1].name, grad_info[0])
+                if grad_info[0] is not None:
+                    tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-            self.updated_vars = {
-                grad_info[1].name[6:]: grad_info[1] - self.learning_rate * grad_info[0]
-                for grad_info in self.grads if grad_info[0] is not None
-            }
+            self.updated_vars = {}
+            for grad_info in self.grads:
+                if grad_info[0] is not None:
+                    self.updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
+                else:
+                    self.updated_vars[grad_info[1].name[6:]] = grad_info[1]
+
+                self.inner_train_ops.append(tf.assign(grad_info[1], self.updated_vars[grad_info[1].name[6:]]))
 
         with tf.variable_scope('updated_model'):
             updated_model = self.model_cls(self.input_validation, self.updated_vars)
@@ -160,40 +368,55 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('meta_loss', reuse=tf.AUTO_REUSE):
             self.meta_loss = self.loss_function(self.input_validation_labels, self.model_out_validation)
             tf.summary.scalar('meta_loss', self.meta_loss)
-            # self.variance_loss = -tf.nn.moments(
-            #     tf.cast(tf.argmax(self.model_out_validation, axis=1), tf.float32), axes=(0, )
-            # )[1]
-            # tf.summary.scalar('variance_loss', self.variance_loss)
 
         with tf.variable_scope('meta_optimizer'):
             meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
-            self.gradients = meta_optimizer.compute_gradients(self.meta_loss, var_list=model_variables)
+            self.gradients = meta_optimizer.compute_gradients(self.meta_loss)
+
             for grad_info in self.gradients:
-                tf.summary.histogram(grad_info[1].name, grad_info[0])
+                if grad_info[0] is not None:
+                    tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-            self.train_op = meta_optimizer.minimize(self.meta_loss, var_list=model_variables)
+            self.train_op = meta_optimizer.minimize(self.meta_loss)
 
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.name, var)
-
-        self.file_writer = tf.summary.FileWriter('logs/2/', tf.get_default_graph())
+        self.log_dir = log_dir + ('train/' if train else 'test/')
+        if os.path.exists(self.log_dir):
+            experiment_num = str(len(os.listdir(self.log_dir)))
+        else:
+            experiment_num = '0'
+        self.log_dir = self.log_dir + experiment_num + '/'
+        self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
         self.merged = tf.summary.merge_all()
 
         self.saver = tf.train.Saver()
 
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
-        tf.train.start_queue_runners(self.sess)
 
-    def loss_function(self, y, y_hat):
-        # return tf.reduce_sum(tf.square(y - y_hat))
-        return tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=y_hat))
+    def loss_function(self, labels, logits):
+        return tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
 
-    def save_model(self, step):
-        self.saver.save(self.sess, 'saved_models/3/model', global_step=step)
+    def neural_loss_function(self, labels, logits):
+        with tf.variable_scope('neural_loss', reuse=tf.AUTO_REUSE):
+            loss_input = tf.concat((labels, logits), axis=1)
+            print('loss input shape: ')
+            print(loss_input.shape)
+            loss_dense_1 = tf.layers.dense(loss_input, units=20, activation=tf.nn.relu, name='loss_dense_1')
+            loss_dense_2 = tf.layers.dense(loss_dense_1, units=20, activation=tf.nn.relu, name='loss_dense_2')
+            loss = tf.layers.dense(loss_dense_2, units=1, activation=None, name='loss_out')
 
-    def load_model(self):
-        self.saver.restore(self.sess, 'saved_models/3/model-5000')
+        return tf.norm(loss)
+
+    def save_model(self, path, step):
+        self.saver = tf.train.Saver()
+        self.saver.save(self.sess, path, global_step=step)
+
+    def load_model(self, path, load_last_layer=True):
+        if not load_last_layer:
+            model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
+            self.saver = tf.train.Saver(var_list=model_variables[:-2])
+
+        self.saver.restore(self.sess, path)
 
     def meta_train(self):
         for it in range(100):

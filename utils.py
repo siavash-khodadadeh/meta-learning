@@ -3,6 +3,7 @@ import os
 
 from scipy.misc import imresize
 import matplotlib.pyplot as plt
+from keras.utils import to_categorical
 
 
 def pre_process(image):
@@ -31,3 +32,21 @@ def get_images(paths, labels, nb_samples=None, shuffle=True):
     if shuffle:
         random.shuffle(images)
     return images
+
+
+def one_hot_vector(labels, concept_size):
+    return to_categorical(labels, concept_size)
+
+
+def get_next_train_val_batch(train_dataset, validation_dataset, concept_size=10):
+    num = train_dataset.num_shot_per_concept
+    train_batch_data, train_batch_labels = train_dataset.next_batch(concept_size=concept_size)
+    val_batch_data, val_batch_labels = validation_dataset.next_batch(concepts=train_batch_labels[0::num].reshape(-1))
+
+    for label in range(concept_size):
+        train_batch_labels[train_batch_labels == train_batch_labels[num * label]] = label
+        val_batch_labels[val_batch_labels == val_batch_labels[num * label]] = label
+
+    train_batch_labels = one_hot_vector(train_batch_labels, concept_size)
+    val_batch_labels = one_hot_vector(val_batch_labels, concept_size)
+    return train_batch_data, train_batch_labels, val_batch_data, val_batch_labels
