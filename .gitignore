@@ -1,0 +1,8 @@
+*.pyc
+.idea/
+saved_models/
+ucf101_tfrecords/
+logs/
+data/
+pretrained-model/
+MAML/

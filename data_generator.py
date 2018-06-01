@@ -16,7 +16,7 @@ class DataGenerator(object):
         self.dim_input = np.prod(self.img_size)
         self.dim_output = self.num_classes
         # data that is pre-resized using PIL with lanczos filter
-        data_folder = './data/omniglot_resized/'
+        data_folder = '../data/omniglot_resized/'
 
         character_folders = [
             os.path.join(data_folder, family, character)

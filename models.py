@@ -330,12 +330,14 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('model'):
             model = self.model_cls(self.input_data)
             self.model_out_train = model.output
-            model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
+            self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
         with tf.variable_scope('loss'):
             if learn_the_loss_function:
                 self.train_loss = self.neural_loss_function(self.input_labels, self.model_out_train)
                 self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
+                for var in self.neural_loss_vars:
+                    tf.summary.histogram(var.name, var)
             else:
                 self.train_loss = self.loss_function(self.input_labels, self.model_out_train)
 
@@ -343,10 +345,10 @@ class ModelAgnosticMetaLearning(object):
 
         with tf.variable_scope('gradients'):
             optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-            self.inner_train_op = optimizer.minimize(self.train_loss, var_list=model_variables)
+            self.inner_train_op = optimizer.minimize(self.train_loss, var_list=self.model_variables)
 
             self.inner_train_ops = []
-            self.grads = optimizer.compute_gradients(self.train_loss, var_list=model_variables)
+            self.grads = optimizer.compute_gradients(self.train_loss, var_list=self.model_variables)
 
             for grad_info in self.grads:
                 if grad_info[0] is not None:
@@ -401,11 +403,11 @@ class ModelAgnosticMetaLearning(object):
             loss_input = tf.concat((labels, logits), axis=1)
             print('loss input shape: ')
             print(loss_input.shape)
-            loss_dense_1 = tf.layers.dense(loss_input, units=20, activation=tf.nn.relu, name='loss_dense_1')
-            loss_dense_2 = tf.layers.dense(loss_dense_1, units=20, activation=tf.nn.relu, name='loss_dense_2')
+            loss_dense_1 = tf.layers.dense(loss_input, units=10, activation=tf.nn.relu, name='loss_dense_1')
+            loss_dense_2 = tf.layers.dense(loss_dense_1, units=10, activation=tf.nn.relu, name='loss_dense_2')
             loss = tf.layers.dense(loss_dense_2, units=1, activation=None, name='loss_out')
 
-        return tf.norm(loss)
+            return tf.norm(loss)
 
     def save_model(self, path, step):
         self.saver = tf.train.Saver()
