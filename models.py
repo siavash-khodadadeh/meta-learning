@@ -318,60 +318,76 @@ class ModelAgnosticMetaLearning(object):
             learn_the_loss_function=False,
             train=True
     ):
+        self.devices = '/gpu:0', '/gpu:1', '/gpu:2', '/gpu:3', '/gpu:4'
+        self.model_cls = model_cls
+        self.meta_learn_rate = meta_learn_rate
+        self.learning_rate = learning_rate
+
         self.input_data = input_data
         self.input_labels = input_labels
         self.input_validation = input_validation
         self.input_validation_labels = input_validation_labels
 
-        self.meta_learn_rate = meta_learn_rate
-        self.learning_rate = learning_rate
+        self.inner_train_ops = []
+        self.tower_losses = []
+        self.inner_model_out = []
 
-        self.model_cls = model_cls
-        with tf.variable_scope('model'):
-            model = self.model_cls(self.input_data)
-            self.model_out_train = model.output
-            self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
+        # Split data such that each part runs on a different GPU
+        input_data_splits = tf.split(self.input_data, len(self.devices))
+        input_labels_split = tf.split(self.input_labels, len(self.devices))
+        input_validation_splits = tf.split(self.input_validation, len(self.devices))
+        input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
+        for (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(zip(
+            self.devices, input_data_splits, input_labels_split, input_validation_splits, input_validation_labels_splits
+        )):
+            with tf.name_scope('device{device_name}'.format(device_name=device_name)):
+                with tf.variable_scope('model'):
+                    model = self.model_cls(input_data)
+                    model_out_train = model.output
+                    self.inner_model_out.append(model_out_train)
+                    self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
-        with tf.variable_scope('loss'):
-            if learn_the_loss_function:
-                self.train_loss = self.neural_loss_function(self.input_labels, self.model_out_train)
-                self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
-                for var in self.neural_loss_vars:
-                    tf.summary.histogram(var.name, var)
-            else:
-                self.train_loss = self.loss_function(self.input_labels, self.model_out_train)
+                with tf.variable_scope('loss'):
+                    if learn_the_loss_function:
+                        train_loss = self.neural_loss_function(input_labels, model_out_train)
+                        self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
+                        for var in self.neural_loss_vars:
+                            tf.summary.histogram(var.name, var)
+                    else:
+                        train_loss = self.loss_function(input_labels, model_out_train)
 
-            tf.summary.scalar('train_loss', self.train_loss)
+                    tf.summary.scalar('train_loss', train_loss)
 
-        with tf.variable_scope('gradients'):
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-            self.inner_train_op = optimizer.minimize(self.train_loss, var_list=self.model_variables)
+                with tf.variable_scope('gradients'):
+                    optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+                    # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
 
-            self.inner_train_ops = []
-            self.grads = optimizer.compute_gradients(self.train_loss, var_list=self.model_variables)
+                    grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
-            for grad_info in self.grads:
-                if grad_info[0] is not None:
-                    tf.summary.histogram(grad_info[1].name, grad_info[0])
+                    for grad_info in grads:
+                        if grad_info[0] is not None:
+                            tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-            self.updated_vars = {}
-            for grad_info in self.grads:
-                if grad_info[0] is not None:
-                    self.updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
-                else:
-                    self.updated_vars[grad_info[1].name[6:]] = grad_info[1]
+                    updated_vars = {}
+                    for grad_info in grads:
+                        if grad_info[0] is not None:
+                            updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
+                        else:
+                            updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
-                self.inner_train_ops.append(tf.assign(grad_info[1], self.updated_vars[grad_info[1].name[6:]]))
+                        self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
 
-        with tf.variable_scope('updated_model'):
-            updated_model = self.model_cls(self.input_validation, self.updated_vars)
-            self.model_out_validation = updated_model.output
+            with tf.variable_scope('updated_model'):
+                updated_model = self.model_cls(input_validation, updated_vars)
+                model_out_validation = updated_model.output
 
-        with tf.variable_scope('meta_loss', reuse=tf.AUTO_REUSE):
-            self.meta_loss = self.loss_function(self.input_validation_labels, self.model_out_validation)
-            tf.summary.scalar('meta_loss', self.meta_loss)
+            with tf.variable_scope('meta_loss', reuse=tf.AUTO_REUSE):
+                meta_loss = self.loss_function(input_validation_labels, model_out_validation)
+                tf.summary.scalar('meta_loss device: {}'.format(device_name), meta_loss)
+                self.tower_losses.append(meta_loss)
 
         with tf.variable_scope('meta_optimizer'):
+            self.meta_loss = tf.add_n(self.tower_losses)
             meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
             self.gradients = meta_optimizer.compute_gradients(self.meta_loss)
 

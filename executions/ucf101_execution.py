@@ -124,7 +124,7 @@ def train_maml():
                 maml.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
 
-                outputs, loss = maml.sess.run([maml.model_out_train, maml.train_loss], feed_dict={
+                outputs = maml.sess.run(maml.inner_model_out, feed_dict={
                     maml.input_data: test_val_data,
                     maml.input_labels: test_val_labels,
                 })
