@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-BASE_ADDRESS = '/home/siavash/programming/C3D-tensorflow/UCF-101/'
+BASE_ADDRESS = '/home/siavash/UCF-101/'
 UCF101_TFRECORDS = './ucf101_tfrecords/'
 
 

@@ -7,7 +7,7 @@ from ucf101_data_generator import get_traditional_dataset
 from models import ModelAgnosticMetaLearning, C3DNetwork
 
 
-BASE_ADDRESS = '/home/siavash/programming/C3D-tensorflow/UCF-101/'
+BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
 NUM_CLASSES = 5
