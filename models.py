@@ -415,7 +415,8 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver = tf.train.Saver()
 
-        self.sess = tf.Session()
+        config = tf.ConfigProto(allow_soft_placement=True)
+        self.sess = tf.Session(config=config)
         self.sess.run(tf.global_variables_initializer())
 
     def loss_function(self, labels, logits):
