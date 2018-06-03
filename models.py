@@ -396,13 +396,13 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('meta_optimizer'):
             self.meta_loss = tf.add_n(self.tower_losses)
             meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
-            self.gradients = meta_optimizer.compute_gradients(self.meta_loss)
+            self.gradients = meta_optimizer.compute_gradients(self.meta_loss, colocate_gradients_with_ops=True)
 
             for grad_info in self.gradients:
                 if grad_info[0] is not None:
                     tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-            self.train_op = meta_optimizer.minimize(self.meta_loss)
+            self.train_op = meta_optimizer.minimize(self.meta_loss, colocate_gradients_with_ops=True)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
