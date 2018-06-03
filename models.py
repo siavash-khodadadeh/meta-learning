@@ -383,6 +383,7 @@ class ModelAgnosticMetaLearning(object):
                                 updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
                             self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
+                    tf.get_variable_scope().reuse_variables()
 
                 with tf.variable_scope('updated_model'):
                     updated_model = self.model_cls(input_validation, updated_vars)
