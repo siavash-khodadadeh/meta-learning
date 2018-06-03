@@ -11,7 +11,7 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
 NUM_CLASSES = 5
-UPDATE_BATCH_SIZE = 5
+CLASS_SAMPLE_SIZE = 4
 META_BATCH_SIZE = 1
 
 
@@ -35,7 +35,8 @@ def train_maml():
 
     train_dataset, test_dataset = get_traditional_dataset(
         num_train_actions=80,
-        test_actions=test_actions
+        test_actions=test_actions,
+        class_sample_size=CLASS_SAMPLE_SIZE,
     )
 
     with tf.variable_scope('train_data'):

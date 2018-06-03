@@ -26,7 +26,7 @@ def one_hot_vector(labels, concept_size):
 
 
 class TraditionalDataset(object):
-    def __init__(self, actions):
+    def __init__(self, actions, class_sample_size):
         self.num_actions = len(actions)
         self.actions = actions
         self.action_samples = {}
@@ -51,7 +51,7 @@ class TraditionalDataset(object):
         self.action_counter = 0
         self.within_class_counter = {action: 0 for action in self.actions}
 
-        self.sample_k_samples(k=5)
+        self.sample_k_samples(k=class_sample_size)
         self.shuffle_actions()
         # self.shuffle_within_actions()
 
@@ -231,14 +231,14 @@ class DataSetUtils(object):
         return dataset
 
 
-def get_traditional_dataset(num_train_actions, train_actions=None, test_actions=None):
+def get_traditional_dataset(num_train_actions, train_actions=None, test_actions=None, class_sample_size=5):
     if train_actions is None:
         train_actions = sorted(os.listdir(BASE_ADDRESS))[:num_train_actions]
     if test_actions is None:
         test_actions = sorted(os.listdir(BASE_ADDRESS))[num_train_actions:]
 
-    train_dataset = TraditionalDataset(train_actions)
-    test_dataset = TraditionalDataset(test_actions)
+    train_dataset = TraditionalDataset(train_actions, class_sample_size=class_sample_size)
+    test_dataset = TraditionalDataset(test_actions, class_sample_size=class_sample_size)
     return train_dataset, test_dataset
 
 
