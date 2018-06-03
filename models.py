@@ -348,13 +348,13 @@ class ModelAgnosticMetaLearning(object):
         ):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    with tf.variable_scope('model'):
+                    with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
                         model = self.model_cls(input_data)
                         model_out_train = model.output
                         self.inner_model_out.append(model_out_train)
                         self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
-                    with tf.variable_scope('loss'):
+                    with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
                         if learn_the_loss_function:
                             train_loss = self.neural_loss_function(input_labels, model_out_train)
                             self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
@@ -365,7 +365,7 @@ class ModelAgnosticMetaLearning(object):
 
                         tf.summary.scalar('train_loss', train_loss)
 
-                    with tf.variable_scope('gradients'):
+                    with tf.variable_scope('gradients', reuse=tf.AUTO_REUSE):
                         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
                         # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
 
@@ -383,9 +383,8 @@ class ModelAgnosticMetaLearning(object):
                                 updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
                             self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
-                    tf.get_variable_scope().reuse_variables()
 
-                with tf.variable_scope('updated_model'):
+                with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
                     updated_model = self.model_cls(input_validation, updated_vars)
                     model_out_validation = updated_model.output
 
