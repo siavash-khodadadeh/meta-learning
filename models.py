@@ -337,9 +337,9 @@ class ModelAgnosticMetaLearning(object):
         input_labels_split = tf.split(self.input_labels, len(self.devices))
         input_validation_splits = tf.split(self.input_validation, len(self.devices))
         input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
-        for (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(zip(
+        for (device_name, input_data, input_labels, input_validation, input_validation_labels) in zip(
             self.devices, input_data_splits, input_labels_split, input_validation_splits, input_validation_labels_splits
-        )):
+        ):
             with tf.name_scope('device{device_name}'.format(device_name=device_name)):
                 with tf.variable_scope('model'):
                     model = self.model_cls(input_data)
