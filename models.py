@@ -343,11 +343,11 @@ class ModelAgnosticMetaLearning(object):
         input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
 
         input_data_splits = [
-            tf.reshape(self.input_data[0, :, :, :, :], (1, -1, -1, -1, -1)),
-            tf.reshape(self.input_data[1, :, :, :, :], (1, -1, -1, -1, -1)),
-            tf.reshape(self.input_data[2, :, :, :, :], (1, -1, -1, -1, -1)),
-            tf.reshape(self.input_data[3, :, :, :, :], (1, -1, -1, -1, -1)),
-            tf.reshape(self.input_data[4, :, :, :, :], (1, -1, -1, -1, -1)),
+            tf.reshape(self.input_data[0, :, :, :, :], (1, 16, 112, 112, 3)),
+            tf.reshape(self.input_data[1, :, :, :, :], (1, 16, 112, 112, 3)),
+            tf.reshape(self.input_data[2, :, :, :, :], (1, 16, 112, 112, 3)),
+            tf.reshape(self.input_data[3, :, :, :, :], (1, 16, 112, 112, 3)),
+            tf.reshape(self.input_data[4, :, :, :, :], (1, 16, 112, 112, 3)),
         ]
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
