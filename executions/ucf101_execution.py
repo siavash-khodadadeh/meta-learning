@@ -9,7 +9,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 5
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
