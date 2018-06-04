@@ -16,14 +16,15 @@ META_BATCH_SIZE = 1
 
 
 def print_accuracy(outputs, labels):
-    outputs_np = np.argmax(outputs, axis=1)
+    # Because we have multiple GPUs, outputs will be of the shape N x 1 x N in numpy
+    outputs_np = np.argmax(outputs, axis=2)
     print(outputs_np)
     labels_np = np.argmax(labels.reshape(-1, 5), axis=1)
     print(labels_np)
 
     print('accuracy:')
     acc_num = np.sum(outputs_np == labels_np)
-    acc = acc_num / len(labels)
+    acc = acc_num / (NUM_CLASSES * CLASS_SAMPLE_SIZE)
     print(acc_num)
     print(acc)
 
