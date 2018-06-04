@@ -371,11 +371,11 @@ class ModelAgnosticMetaLearning(object):
 
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
-                        print('printing grad info:')
-                        for grad_info in grads:
-                            print(grad_info[1].name, grad_info[0])
-                            if grad_info[0] is not None:
-                                tf.summary.histogram(grad_info[1].name, grad_info[0])
+                        # print('printing grad info:')
+                        # for grad_info in grads:
+                        #     print(grad_info[1].name, grad_info[0])
+                        #     if grad_info[0] is not None:
+                        #         tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                         updated_vars = {}
                         for grad_info in grads:
