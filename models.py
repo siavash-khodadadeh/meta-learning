@@ -337,18 +337,10 @@ class ModelAgnosticMetaLearning(object):
         self.inner_model_out = []
 
         # Split data such that each part runs on a different GPU
-        # input_data_splits = tf.split(self.input_data, len(self.devices))
+        input_data_splits = tf.split(self.input_data, len(self.devices))
         input_labels_split = tf.split(self.input_labels, len(self.devices))
         input_validation_splits = tf.split(self.input_validation, len(self.devices))
         input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
-
-        input_data_splits = [
-            tf.reshape(self.input_data[0, :, :, :, :], (1, 16, 112, 112, 3)),
-            tf.reshape(self.input_data[1, :, :, :, :], (1, 16, 112, 112, 3)),
-            tf.reshape(self.input_data[2, :, :, :, :], (1, 16, 112, 112, 3)),
-            tf.reshape(self.input_data[3, :, :, :, :], (1, 16, 112, 112, 3)),
-            tf.reshape(self.input_data[4, :, :, :, :], (1, 16, 112, 112, 3)),
-        ]
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
@@ -367,6 +359,11 @@ class ModelAgnosticMetaLearning(object):
                     with tf.variable_scope('input_data'):
                         tf.summary.image('train_image', input_data[:, 0, :, :, :], max_outputs=5)
                         tf.summary.image('validation_image', input_validation[:, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('train_image_my_split0', self.input_data[0, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('train_image_my_split1', self.input_data[1, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('train_image_my_split2', self.input_data[2, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('train_image_my_split3', self.input_data[3, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('train_image_my_split4', self.input_data[4, 0, :, :, :], max_outputs=5)
 
                     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
                         model = self.model_cls(input_data)
