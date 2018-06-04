@@ -196,7 +196,8 @@ class C3DNetwork(object):
             self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             # self.transpose = tf.transpose(self.maxpool5, perm=[0, 1, 4, 2, 3])
-            self.flatten = tf.layers.flatten(self.maxpool5)
+            self.transpose = tf.transpose(self.maxpool5, (0, 1, 4, 2, 3))
+            self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
             self.output = tf.layers.dense(self.dense2, 5, activation=None, name='dense3')
@@ -280,7 +281,8 @@ class C3DNetwork(object):
             )
             self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
-            self.flatten = tf.layers.flatten(self.maxpool5)
+            self.transpose = tf.transpose(self.maxpool5, (0, 1, 4, 2, 3))
+            self.flatten = tf.layers.flatten(self.transpose)
             self.dense = dense(
                 self.flatten,
                 weights=weights['dense1/kernel:0'],
@@ -371,11 +373,11 @@ class ModelAgnosticMetaLearning(object):
 
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
-                        # print('printing grad info:')
-                        # for grad_info in grads:
-                        #     print(grad_info[1].name, grad_info[0])
-                        #     if grad_info[0] is not None:
-                        #         tf.summary.histogram(grad_info[1].name, grad_info[0])
+                        print('printing grad info:')
+                        for grad_info in grads:
+                            print(grad_info[1].name, grad_info[0])
+                            if grad_info[0] is not None:
+                                tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                         updated_vars = {}
                         for grad_info in grads:
