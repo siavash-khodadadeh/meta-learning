@@ -415,9 +415,9 @@ class ModelAgnosticMetaLearning(object):
             averaged_grads = average_gradients(self.tower_grads)
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
-        print(tf.trainable_variables())
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.op.name, var)
+        # print(tf.trainable_variables())
+        # for var in tf.trainable_variables():
+        #     tf.summary.histogram(var.name, var)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
