@@ -83,7 +83,7 @@ def train_maml():
                 val_labels_ph: val_labels,
             })
 
-            if it % 20 == 0 and it != 0:
+            if it % 20 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
                     input_data_ph: tr_data,
                     input_labels_ph: tr_labels,
