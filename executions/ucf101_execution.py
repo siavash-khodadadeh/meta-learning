@@ -11,7 +11,7 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
 NUM_CLASSES = 5
-CLASS_SAMPLE_SIZE = 4
+CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 
 
@@ -62,7 +62,7 @@ def train_maml():
     )
 
     if TRAIN:
-        # maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
+        maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
         print('start meta training.')
 
         it = 0

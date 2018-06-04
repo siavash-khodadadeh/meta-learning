@@ -318,7 +318,7 @@ class ModelAgnosticMetaLearning(object):
             learn_the_loss_function=False,
             train=True
     ):
-        self.devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(10)]
+        self.devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(5)]
         self.model_cls = model_cls
         self.meta_learn_rate = meta_learn_rate
         self.learning_rate = learning_rate
