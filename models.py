@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 
 from meta_layers import conv2d, dense, conv3d
+from utils import average_gradients
 
 
 class NeuralNetwork(object):
@@ -332,6 +333,7 @@ class ModelAgnosticMetaLearning(object):
 
         self.inner_train_ops = []
         self.tower_losses = []
+        self.tower_grads = []
         self.inner_model_out = []
 
         # Split data such that each part runs on a different GPU
@@ -339,6 +341,10 @@ class ModelAgnosticMetaLearning(object):
         input_labels_split = tf.split(self.input_labels, len(self.devices))
         input_validation_splits = tf.split(self.input_validation, len(self.devices))
         input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
+
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
                 self.devices,
@@ -368,9 +374,7 @@ class ModelAgnosticMetaLearning(object):
                         tf.summary.scalar('train_loss', train_loss)
 
                     with tf.variable_scope('gradients', reuse=tf.AUTO_REUSE):
-                        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
                         # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
-
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
                         print('printing grad info:')
@@ -398,17 +402,18 @@ class ModelAgnosticMetaLearning(object):
                     tf.summary.scalar('meta_loss device: {}'.format(device_name), meta_loss)
                     self.tower_losses.append(meta_loss)
 
-        print(self.inner_train_ops)
-        with tf.variable_scope('meta_optimizer'):
-            self.meta_loss = tf.add_n(self.tower_losses)
-            meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
-            self.gradients = meta_optimizer.compute_gradients(self.meta_loss, colocate_gradients_with_ops=True)
+                with tf.variable_scope('meta_optimizer', reuse=tf.AUTO_REUSE):
+                    gradients = meta_optimizer.compute_gradients(meta_loss)
 
-            for grad_info in self.gradients:
-                if grad_info[0] is not None:
-                    tf.summary.histogram(grad_info[1].name, grad_info[0])
+                    for grad_info in gradients:
+                        if grad_info[0] is not None:
+                            tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-            self.train_op = meta_optimizer.minimize(self.meta_loss, colocate_gradients_with_ops=True)
+                    self.tower_grads.append(grads)
+
+        with tf.variable_scope('average_gradients'):
+            grads = average_gradients(self.tower_grads)
+            self.train_op = meta_optimizer.apply_gradients(grads)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
