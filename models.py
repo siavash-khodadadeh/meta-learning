@@ -409,7 +409,7 @@ class ModelAgnosticMetaLearning(object):
                         if grad_info[0] is not None:
                             tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-                    self.tower_grads.append(grads)
+                    self.tower_grads.append(gradients)
 
         with tf.variable_scope('average_gradients'):
             grads = average_gradients(self.tower_grads)
