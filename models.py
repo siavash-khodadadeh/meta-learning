@@ -359,11 +359,11 @@ class ModelAgnosticMetaLearning(object):
                     with tf.variable_scope('input_data'):
                         tf.summary.image('train_image', input_data[:, 0, :, :, :], max_outputs=5)
                         tf.summary.image('validation_image', input_validation[:, 0, :, :, :], max_outputs=5)
-                        tf.summary.image('train_image_my_split0', tf.reshape(self.input_data[0, 0, :, :, :], (1, 1, 112, 112, 3)), max_outputs=5)
-                        tf.summary.image('train_image_my_split1', tf.reshape(self.input_data[1, 0, :, :, :], (1, 1, 112, 112, 3)), max_outputs=5)
-                        tf.summary.image('train_image_my_split2', tf.reshape(self.input_data[2, 0, :, :, :], (1, 1, 112, 112, 3)), max_outputs=5)
-                        tf.summary.image('train_image_my_split3', tf.reshape(self.input_data[3, 0, :, :, :], (1, 1, 112, 112, 3)), max_outputs=5)
-                        tf.summary.image('train_image_my_split4', tf.reshape(self.input_data[4, 0, :, :, :], (1, 1, 112, 112, 3)), max_outputs=5)
+                        tf.summary.image('train_image_my_split0', tf.reshape(self.input_data[0, 0, :, :, :], (1, 112, 112, 3)), max_outputs=5)
+                        tf.summary.image('train_image_my_split1', tf.reshape(self.input_data[1, 0, :, :, :], (1, 112, 112, 3)), max_outputs=5)
+                        tf.summary.image('train_image_my_split2', tf.reshape(self.input_data[2, 0, :, :, :], (1, 112, 112, 3)), max_outputs=5)
+                        tf.summary.image('train_image_my_split3', tf.reshape(self.input_data[3, 0, :, :, :], (1, 112, 112, 3)), max_outputs=5)
+                        tf.summary.image('train_image_my_split4', tf.reshape(self.input_data[4, 0, :, :, :], (1, 112, 112, 3)), max_outputs=5)
 
                     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
                         model = self.model_cls(input_data)
