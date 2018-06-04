@@ -337,10 +337,18 @@ class ModelAgnosticMetaLearning(object):
         self.inner_model_out = []
 
         # Split data such that each part runs on a different GPU
-        input_data_splits = tf.split(self.input_data, len(self.devices))
+        # input_data_splits = tf.split(self.input_data, len(self.devices))
         input_labels_split = tf.split(self.input_labels, len(self.devices))
         input_validation_splits = tf.split(self.input_validation, len(self.devices))
         input_validation_labels_splits = tf.split(self.input_validation_labels, len(self.devices))
+
+        input_data_splits = [
+            self.input_data[0, :, :, :, :],
+            self.input_data[1, :, :, :, :],
+            self.input_data[2, :, :, :, :],
+            self.input_data[3, :, :, :, :],
+            self.input_data[4, :, :, :, :],
+        ]
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
