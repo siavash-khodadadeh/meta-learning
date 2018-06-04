@@ -353,7 +353,6 @@ class ModelAgnosticMetaLearning(object):
                         model_out_train = model.output
                         self.inner_model_out.append(model_out_train)
                         self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
-                        print(self.model_variables)
 
                     with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
                         if learn_the_loss_function:
@@ -372,7 +371,9 @@ class ModelAgnosticMetaLearning(object):
 
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
+                        print('printing grad info:')
                         for grad_info in grads:
+                            print(grad_info[1].name, grad_info[0])
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
