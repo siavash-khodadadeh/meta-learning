@@ -377,11 +377,11 @@ class ModelAgnosticMetaLearning(object):
                         # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
-                        print('printing grad info:')
-                        for grad_info in grads:
-                            print(grad_info[1].name, grad_info[0])
-                            if grad_info[0] is not None:
-                                tf.summary.histogram(grad_info[1].name, grad_info[0])
+                        # print('printing grad info:')
+                        # for grad_info in grads:
+                        #     print(grad_info[1].name, grad_info[0])
+                        #     if grad_info[0] is not None:
+                        #         tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                         updated_vars = {}
                         for grad_info in grads:
@@ -405,15 +405,19 @@ class ModelAgnosticMetaLearning(object):
                 with tf.variable_scope('meta_optimizer', reuse=tf.AUTO_REUSE):
                     gradients = meta_optimizer.compute_gradients(meta_loss)
 
-                    for grad_info in gradients:
-                        if grad_info[0] is not None:
-                            tf.summary.histogram(grad_info[1].name, grad_info[0])
+                    # for grad_info in gradients:
+                    #     if grad_info[0] is not None:
+                    #         tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                     self.tower_grads.append(gradients)
 
         with tf.variable_scope('average_gradients'):
-            grads = average_gradients(self.tower_grads)
-            self.train_op = meta_optimizer.apply_gradients(grads)
+            averaged_grads = average_gradients(self.tower_grads)
+            self.train_op = meta_optimizer.apply_gradients(averaged_grads)
+
+        print(tf.trainable_variables())
+        for var in tf.trainable_variables():
+            tf.summary.histogram(var.op.name, var)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
