@@ -440,7 +440,7 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver = tf.train.Saver()
 
-        config = tf.ConfigProto(allow_soft_placement=True)
+        config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
         self.sess = tf.Session(config=config)
         self.sess.run(tf.global_variables_initializer())
 
