@@ -340,12 +340,12 @@ class ModelAgnosticMetaLearning(object):
         num_gpu_devices = len(self.devices)
 
         # input_data_splits = tf.split(self.input_data, num_gpu_devices)
-        input_data_splits = [tf.reshape(self.input_data[i, :, :, :, :], (None, 16, 112, 112, 3)) for i in range(5)]
+        input_data_splits = [tf.reshape(self.input_data[i, :, :, :, :], (-1, 16, 112, 112, 3)) for i in range(5)]
 
         input_labels_split = tf.split(self.input_labels, num_gpu_devices)
 
-        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
-        input_validation_splits = [tf.reshape(self.input_validation[i, :, :, :, :], (None, 16, 112, 112, 3)) for i in range(5)]
+        # input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
+        input_validation_splits = [tf.reshape(self.input_validation[i, :, :, :, :], (-1, 16, 112, 112, 3)) for i in range(5)]
 
         input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
 
