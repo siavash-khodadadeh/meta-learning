@@ -80,18 +80,6 @@ def train_maml():
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
-            # tr_data = tr_data[::5, :, :, :, :]
-            # tr_labels = tr_labels[::5, :]
-            # val_data = val_data[::5, :, :, :, :]
-            # val_labels = val_labels[::5, :]
-
-            maml.sess.run(maml.train_op, feed_dict={
-                input_data_ph: tr_data,
-                input_labels_ph: tr_labels,
-                val_data_ph: val_data,
-                val_labels_ph: val_labels,
-            })
-
             if it % 20 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
                     input_data_ph: tr_data,
@@ -101,6 +89,13 @@ def train_maml():
                 })
                 maml.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
+
+            maml.sess.run(maml.train_op, feed_dict={
+                input_data_ph: tr_data,
+                input_labels_ph: tr_labels,
+                val_data_ph: val_data,
+                val_labels_ph: val_labels,
+            })
 
         if it != 0:
             maml.save_model(path='saved_models/ucf101/model', step=it)
@@ -112,11 +107,6 @@ def train_maml():
         print(test_dataset.actions[:5])
         test_data, test_labels = data['train']
         test_val_data, test_val_labels = data['validation']
-
-        # test_data = test_data[::5, :, :, :, :]
-        # test_labels = test_labels[::5, :]
-        # test_val_data = test_val_data[::5, :, :, :, :]
-        # test_val_labels = test_val_labels[::5, :]
 
         for it in range(5):
             maml.sess.run(maml.inner_train_ops, feed_dict={
