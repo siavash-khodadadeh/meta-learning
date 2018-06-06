@@ -50,7 +50,7 @@ def train_maml():
         val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
-    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(10)]
+    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(5)]
 
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,
