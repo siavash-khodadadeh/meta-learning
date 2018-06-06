@@ -70,7 +70,7 @@ def train_maml():
         print('start meta training.')
 
         it = 0
-        for it in range(1001):
+        for it in range(101):
             data = train_dataset.next_batch(num_classes=5)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
