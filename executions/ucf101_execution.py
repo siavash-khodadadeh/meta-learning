@@ -13,7 +13,7 @@ TRAIN = True
 NUM_CLASSES = 5
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 1
+NUM_GPUS = 5
 
 
 def print_accuracy(outputs, labels):
