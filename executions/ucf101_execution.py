@@ -9,7 +9,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
-TRAIN = True
+TRAIN = False
 NUM_CLASSES = 5
 CLASS_SAMPLE_SIZE = 2
 META_BATCH_SIZE = 1
@@ -105,7 +105,7 @@ def train_maml():
             maml.save_model(path='saved_models/ucf101/model', step=it)
 
     else:
-        maml.load_model(path='saved_models/ucf101/model-1000')
+        maml.load_model(path='saved_models/ucf101/model-100')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=5)
         print(test_dataset.actions[:5])
@@ -124,13 +124,14 @@ def train_maml():
             })
 
             if it % 1 == 0:
-                merged_summary = maml.sess.run(maml.merged, feed_dict={
-                    input_data_ph: test_data,
-                    input_labels_ph: test_labels,
-                    val_data_ph: test_val_data,
-                    val_labels_ph: test_val_labels,
-                })
-                maml.file_writer.add_summary(merged_summary, global_step=it)
+                # merged_summary = maml.sess.run(maml.merged, feed_dict={
+                #     input_data_ph: test_data,
+                #     input_labels_ph: test_labels,
+                #     val_data_ph: test_val_data,
+                #     val_labels_ph: test_val_labels,
+                # })
+                # maml.file_writer.add_summary(merged_summary, global_step=it)
+                print('gradient step: ')
                 print(it)
 
                 outputs = maml.sess.run(maml.inner_model_out, feed_dict={
