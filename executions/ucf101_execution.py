@@ -9,10 +9,11 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 5
-CLASS_SAMPLE_SIZE = 2
+CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
+NUM_GPUS = 1
 
 
 def print_accuracy(outputs, labels):
@@ -54,7 +55,7 @@ def train_maml():
         val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
-    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(5)]
+    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,
