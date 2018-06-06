@@ -11,15 +11,15 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
 NUM_CLASSES = 5
-CLASS_SAMPLE_SIZE = 1
+CLASS_SAMPLE_SIZE = 2
 META_BATCH_SIZE = 1
 
 
 def print_accuracy(outputs, labels):
     # Because we have multiple GPUs, outputs will be of the shape N x 1 x N in numpy
-    outputs_np = np.argmax(outputs, axis=2).reshape(-1, 5)
+    outputs_np = np.argmax(outputs, axis=2).reshape(-1, NUM_CLASSES * CLASS_SAMPLE_SIZE)
     print(outputs_np)
-    labels_np = np.argmax(labels.reshape(-1, 5), axis=1)
+    labels_np = np.argmax(labels.reshape(-1, NUM_CLASSES * CLASS_SAMPLE_SIZE), axis=1)
     print(labels_np)
 
     print('accuracy:')
@@ -50,6 +50,8 @@ def train_maml():
         val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
+    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(10)]
+
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,
         input_data_ph,
@@ -57,6 +59,7 @@ def train_maml():
         val_data_ph,
         val_labels_ph,
         log_dir=LOG_DIR,
+        gpu_devices=gpu_devices,
         meta_learn_rate=0.00001,
         learning_rate=0.001,
         train=TRAIN

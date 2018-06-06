@@ -316,12 +316,18 @@ class ModelAgnosticMetaLearning(object):
             input_validation_ph,
             input_validation_labels_ph,
             log_dir,
+            neural_loss_learning_rate=0.001,
             meta_learn_rate=0.00001,
             learning_rate=0.0001,
+            gpu_devices=None,
             learn_the_loss_function=False,
             train=True
     ):
-        self.devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(5)]
+        if gpu_devices is None:
+            self.devices = '/gpu:0',
+        else:
+            self.devices = gpu_devices
+
         self.model_cls = model_cls
         self.meta_learn_rate = meta_learn_rate
         self.learning_rate = learning_rate
@@ -335,22 +341,21 @@ class ModelAgnosticMetaLearning(object):
         self.tower_losses = []
         self.tower_grads = []
         self.inner_model_out = []
+        if learn_the_loss_function:
+            self.tower_neural_gradients = []
 
         # Split data such that each part runs on a different GPU
         num_gpu_devices = len(self.devices)
 
-        # input_data_splits = tf.split(self.input_data, num_gpu_devices)
-        input_data_splits = [tf.reshape(self.input_data[i, :, :, :, :], (-1, 16, 112, 112, 3)) for i in range(5)]
-
+        input_data_splits = tf.split(self.input_data, num_gpu_devices)
         input_labels_split = tf.split(self.input_labels, num_gpu_devices)
-
-        # input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
-        input_validation_splits = [tf.reshape(self.input_validation[i, :, :, :, :], (-1, 16, 112, 112, 3)) for i in range(5)]
-
+        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
         input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
+        if learn_the_loss_function:
+            neural_loss_optimizer = tf.train.AdamOptimizer(learning_rate=neural_loss_learning_rate)
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
@@ -388,11 +393,9 @@ class ModelAgnosticMetaLearning(object):
                         # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
 
-                        # print('printing grad info:')
-                        # for grad_info in grads:
-                        #     print(grad_info[1].name, grad_info[0])
-                        #     if grad_info[0] is not None:
-                        #         tf.summary.histogram(grad_info[1].name, grad_info[0])
+                        for grad_info in grads:
+                            if grad_info[0] is not None:
+                                tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                         updated_vars = {}
                         for grad_info in grads:
@@ -413,21 +416,34 @@ class ModelAgnosticMetaLearning(object):
                     self.tower_losses.append(meta_loss)
 
                 with tf.variable_scope('meta_optimizer'):
-                    gradients = meta_optimizer.compute_gradients(meta_loss)
+                    gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
 
-                    # for grad_info in gradients:
-                    #     if grad_info[0] is not None:
-                    #         tf.summary.histogram(grad_info[1].name, grad_info[0])
+                    for grad_info in gradients:
+                        if grad_info[0] is not None:
+                            tf.summary.histogram(grad_info[1].name, grad_info[0])
 
                     self.tower_grads.append(gradients)
+
+                    if learn_the_loss_function:
+                        loss_gradients = neural_loss_optimizer.compute_gradients(
+                            meta_loss, var_list=self.neural_loss_vars
+                        )
+
+                        for grad_info in loss_gradients:
+                            if grad_info[0] is not None:
+                                tf.summary.histogram(grad_info[1].name, grad_info[0])
+                        self.tower_neural_gradients.append(loss_gradients)
 
         with tf.variable_scope('average_gradients'):
             averaged_grads = average_gradients(self.tower_grads)
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
-        # print(tf.trainable_variables())
-        # for var in tf.trainable_variables():
-        #     tf.summary.histogram(var.name, var)
+            if learn_the_loss_function:
+                averaged_neural_grads = average_gradients(self.tower_neural_gradients)
+                self.loss_func_op = neural_loss_optimizer.apply_gradients(averaged_neural_grads)
+
+        for var in tf.trainable_variables():
+            tf.summary.histogram(var.name, var)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
