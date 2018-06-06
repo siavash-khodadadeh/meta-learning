@@ -23,7 +23,7 @@ def print_accuracy(outputs, labels):
     print(outputs_np)
     print('labels:')
     print(labels)
-    labels_np = np.argmax(labels.reshape(-1, NUM_CLASSES * CLASS_SAMPLE_SIZE), axis=1)
+    labels_np = np.argmax(labels.reshape(-1, NUM_CLASSES), axis=1)
     print(labels_np)
 
     print('accuracy:')
