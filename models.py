@@ -404,7 +404,8 @@ class ModelAgnosticMetaLearning(object):
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
         with tf.variable_scope('average_inner_gradients'):
-            averaged_inner_gradients = average_gradients(self.inner_grads)
+            with tf.device('./cpu:0'):
+                averaged_inner_gradients = average_gradients(self.inner_grads)
 
             updated_vars = {}
             for grad_info in averaged_inner_gradients:
@@ -460,7 +461,9 @@ class ModelAgnosticMetaLearning(object):
                             self.tower_neural_gradients.append(loss_gradients)
 
         with tf.variable_scope('average_gradients'):
-            averaged_grads = average_gradients(self.tower_meta_grads)
+            with tf.device('./cpu:0'):
+                averaged_grads = average_gradients(self.tower_meta_grads)
+
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
             if learn_the_loss_function:
