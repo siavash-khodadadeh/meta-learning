@@ -11,7 +11,7 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
 NUM_CLASSES = 5
-CLASS_SAMPLE_SIZE = 1
+CLASS_SAMPLE_SIZE = 5
 META_BATCH_SIZE = 1
 NUM_GPUS = 5
 
@@ -115,13 +115,13 @@ def train_maml():
             })
 
             if it % 1 == 0:
-                # merged_summary = maml.sess.run(maml.merged, feed_dict={
-                #     input_data_ph: test_data,
-                #     input_labels_ph: test_labels,
-                #     val_data_ph: test_val_data,
-                #     val_labels_ph: test_val_labels,
-                # })
-                # maml.file_writer.add_summary(merged_summary, global_step=it)
+                merged_summary = maml.sess.run(maml.merged, feed_dict={
+                    input_data_ph: test_data,
+                    input_labels_ph: test_labels,
+                    val_data_ph: test_val_data,
+                    val_labels_ph: test_val_labels,
+                })
+                maml.file_writer.add_summary(merged_summary, global_step=it)
                 print('gradient step: ')
                 print(it)
 
