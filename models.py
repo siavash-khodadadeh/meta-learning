@@ -338,9 +338,14 @@ class ModelAgnosticMetaLearning(object):
         self.input_validation_labels = input_validation_labels_ph
 
         self.inner_train_ops = []
-        self.tower_losses = []
-        self.tower_grads = []
         self.inner_model_out = []
+
+        self.inner_losses = []
+        self.inner_grads = []
+
+        self.tower_meta_losses = []
+        self.tower_meta_grads = []
+
         if learn_the_loss_function:
             self.tower_neural_gradients = []
 
@@ -387,55 +392,75 @@ class ModelAgnosticMetaLearning(object):
                         else:
                             train_loss = self.loss_function(input_labels, model_out_train)
 
+                        self.inner_losses.append(train_loss)
                         tf.summary.scalar('train_loss', train_loss)
 
                     with tf.variable_scope('gradients'):
-                        # inner_train_op = optimizer.minimize(train_loss, var_list=self.model_variables)
                         grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
+                        self.inner_grads.append(grads)
 
                         for grad_info in grads:
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-                        updated_vars = {}
-                        for grad_info in grads:
-                            if grad_info[0] is not None:
-                                updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
-                            else:
-                                updated_vars[grad_info[1].name[6:]] = grad_info[1]
+        with tf.variable_scope('average_inner_gradients'):
+            averaged_inner_gradients = average_gradients(self.inner_grads)
 
-                            self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
+            updated_vars = {}
+            for grad_info in averaged_inner_gradients:
+                if grad_info[0] is not None:
+                    updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
+                else:
+                    updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
-                with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
-                    updated_model = self.model_cls(input_validation, updated_vars)
-                    model_out_validation = updated_model.output
+                self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
 
-                with tf.variable_scope('meta_loss'):
-                    meta_loss = self.loss_function(input_validation_labels, model_out_validation)
-                    tf.summary.scalar('meta_loss device: {}'.format(device_name), meta_loss)
-                    self.tower_losses.append(meta_loss)
+        for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
+            zip(
+                self.devices,
+                input_data_splits,
+                input_labels_split,
+                input_validation_splits,
+                input_validation_labels_splits
+            )
+        ):
 
-                with tf.variable_scope('meta_optimizer'):
-                    gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
+            with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
+                with tf.device(device_name):
+                    with tf.variable_scope('input_meta_data'):
+                        tf.summary.image('train_meta_image', input_data[:, 0, :, :, :], max_outputs=5)
+                        tf.summary.image('validation_meta_image', input_validation[:, 0, :, :, :], max_outputs=5)
 
-                    for grad_info in gradients:
-                        if grad_info[0] is not None:
-                            tf.summary.histogram(grad_info[1].name, grad_info[0])
+                    with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
+                        updated_model = self.model_cls(input_validation, updated_vars)
+                        model_out_validation = updated_model.output
 
-                    self.tower_grads.append(gradients)
+                    with tf.variable_scope('meta_loss'):
+                        meta_loss = self.loss_function(input_validation_labels, model_out_validation)
+                        tf.summary.scalar('meta_loss', meta_loss)
+                        self.tower_meta_losses.append(meta_loss)
 
-                    if learn_the_loss_function:
-                        loss_gradients = neural_loss_optimizer.compute_gradients(
-                            meta_loss, var_list=self.neural_loss_vars
-                        )
+                    with tf.variable_scope('meta_optimizer'):
+                        gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
 
-                        for grad_info in loss_gradients:
+                        for grad_info in gradients:
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
-                        self.tower_neural_gradients.append(loss_gradients)
+
+                        self.tower_meta_grads.append(gradients)
+
+                        if learn_the_loss_function:
+                            loss_gradients = neural_loss_optimizer.compute_gradients(
+                                meta_loss, var_list=self.neural_loss_vars
+                            )
+
+                            for grad_info in loss_gradients:
+                                if grad_info[0] is not None:
+                                    tf.summary.histogram(grad_info[1].name, grad_info[0])
+                            self.tower_neural_gradients.append(loss_gradients)
 
         with tf.variable_scope('average_gradients'):
-            averaged_grads = average_gradients(self.tower_grads)
+            averaged_grads = average_gradients(self.tower_meta_grads)
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
             if learn_the_loss_function:
