@@ -26,7 +26,7 @@ def one_hot_vector(labels, concept_size):
 
 
 class TraditionalDataset(object):
-    def __init__(self, actions, class_sample_size):
+    def __init__(self, actions, class_sample_size, base_address):
         self.num_actions = len(actions)
         self.actions = actions
         self.action_samples = {}
@@ -34,7 +34,7 @@ class TraditionalDataset(object):
         self.action_samples_validation = {}
 
         for action_directory in self.actions:
-            action_path = os.path.join(BASE_ADDRESS, action_directory)
+            action_path = os.path.join(base_address, action_directory)
             self.action_samples[action_directory] = [
                 os.path.join(action_path, action) for action in os.listdir(action_path)
             ]
@@ -128,11 +128,11 @@ class TraditionalDataset(object):
 
 
 class DataSetUtils(object):
-    def create_tfrecord_dataset(self):
-        labels = sorted(os.listdir(BASE_ADDRESS))
+    def create_tfrecord_dataset(self, base_address):
+        labels = sorted(os.listdir(base_address))
         for label in labels:
             DataSetUtils.check_tf_directory(label)
-            label_address = os.path.join(BASE_ADDRESS, label)
+            label_address = os.path.join(base_address, label)
             samples = sorted(os.listdir(label_address))
             for sample in samples:
                 if sample.startswith('v_PommelHorse_g05'):
@@ -231,14 +231,14 @@ class DataSetUtils(object):
         return dataset
 
 
-def get_traditional_dataset(num_train_actions, train_actions=None, test_actions=None, class_sample_size=5):
+def get_traditional_dataset(num_train_actions, base_address, train_actions=None, test_actions=None, class_sample_size=5):
     if train_actions is None:
-        train_actions = sorted(os.listdir(BASE_ADDRESS))[:num_train_actions]
+        train_actions = sorted(os.listdir(base_address))[:num_train_actions]
     if test_actions is None:
-        test_actions = sorted(os.listdir(BASE_ADDRESS))[num_train_actions:]
+        test_actions = sorted(os.listdir(base_address))[num_train_actions:]
 
-    train_dataset = TraditionalDataset(train_actions, class_sample_size=class_sample_size)
-    test_dataset = TraditionalDataset(test_actions, class_sample_size=class_sample_size)
+    train_dataset = TraditionalDataset(train_actions, class_sample_size=class_sample_size, base_address=base_address)
+    test_dataset = TraditionalDataset(test_actions, class_sample_size=class_sample_size, base_address=base_address)
     return train_dataset, test_dataset
 
 
@@ -259,24 +259,6 @@ def get_fast_dataset(directories):
         'video': example['video'][num_samples_per_batch:],
     }
     return train_example, val_example
-
-
-def test_traditional_dataset():
-    labels = sorted(os.listdir(BASE_ADDRESS))
-    dataset = TraditionalDataset(labels)
-    while True:
-        data = dataset.next_batch(num_classes=5)
-        tr_data, tr_labels = data['train']
-        va_data, va_labels = data['validation']
-        print(tr_data.shape)
-        print(tr_labels.shape)
-        for i in range(5):
-            plt.imshow(tr_data[5 * i, 0, :, :, :])
-            plt.show()
-            print(tr_labels[5 * i])
-            plt.imshow(va_data[5 * i, 0, :, :, :])
-            plt.show()
-            print(va_labels[5 * i])
 
 
 def test_tfercord_dataset():
