@@ -14,7 +14,7 @@ TRAIN = True
 NUM_CLASSES = 30
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 10
+NUM_GPUS = 1
 
 
 def print_accuracy(outputs, labels):
@@ -43,19 +43,18 @@ def train_maml():
     train_dataset, test_dataset = get_traditional_dataset(
         num_train_actions=600,
         base_address=BASE_ADDRESS,
-        test_actions=test_actions,
         class_sample_size=CLASS_SAMPLE_SIZE,
     )
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
-        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, NUM_CLASSES])
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=NUM_CLASSES)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
-        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, NUM_CLASSES])
+        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=NUM_CLASSES)
 
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 

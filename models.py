@@ -373,9 +373,9 @@ class ModelAgnosticMetaLearning(object):
         ):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    with tf.variable_scope('input_data'):
-                        tf.summary.image('train_image', input_data[:, 0, :, :, :], max_outputs=5)
-                        tf.summary.image('validation_image', input_validation[:, 0, :, :, :], max_outputs=5)
+                    # with tf.variable_scope('input_data'):
+                    #     tf.summary.image('train_image', input_data[:, 0, :, :, :], max_outputs=30)
+                    #     tf.summary.image('validation_image', input_validation[:, 0, :, :, :], max_outputs=30)
 
                     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
                         model = self.model_cls(input_data)
@@ -428,9 +428,9 @@ class ModelAgnosticMetaLearning(object):
 
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    with tf.variable_scope('input_meta_data'):
-                        tf.summary.image('train_meta_image', input_data[:, 0, :, :, :], max_outputs=5)
-                        tf.summary.image('validation_meta_image', input_validation[:, 0, :, :, :], max_outputs=5)
+                    # with tf.variable_scope('input_meta_data'):
+                    #     tf.summary.image('train_meta_image', input_data[:, 0, :, :, :], max_outputs=5)
+                    #     tf.summary.image('validation_meta_image', input_validation[:, 0, :, :, :], max_outputs=5)
 
                     with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
                         updated_model = self.model_cls(input_validation, updated_vars)
