@@ -77,7 +77,7 @@ def train_maml():
 
         it = 0
         for it in range(1001):
-            data = train_dataset.next_batch(num_classes=5)
+            data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
@@ -104,7 +104,7 @@ def train_maml():
     else:
         maml.load_model(path='saved_models/ucf101/model-1000')
         print('Start testing the network')
-        data = test_dataset.next_batch(num_classes=5)
+        data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         print(test_dataset.actions[:5])
         test_data, test_labels = data['train']
         test_val_data, test_val_labels = data['validation']
