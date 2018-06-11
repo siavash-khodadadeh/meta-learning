@@ -72,7 +72,7 @@ class TraditionalDataset(object):
         for action in self.actions:
             self.shuffle_within_action(action)
 
-    def get_data_and_labels(self, files):
+    def get_data_and_labels(self, files, num_classes):
         """This function takes a list of list. Each list within the list corresponds to one class."""
         data = []
         labels = []
@@ -97,7 +97,7 @@ class TraditionalDataset(object):
             label_counter += 1
 
         return np.concatenate(data).reshape(-1, 16, 112, 112, 3), \
-            one_hot_vector(np.array(labels).reshape(-1, 1), concept_size=5)
+            one_hot_vector(np.array(labels).reshape(-1, 1), concept_size=num_classes)
 
     def next_batch(self, num_classes):
         action_begin = self.action_counter
@@ -122,8 +122,8 @@ class TraditionalDataset(object):
             validation_files.append(validation_samples)
 
         return {
-            'train': self.get_data_and_labels(train_files),
-            'validation': self.get_data_and_labels(validation_files),
+            'train': self.get_data_and_labels(train_files, num_classes),
+            'validation': self.get_data_and_labels(validation_files, num_classes),
         }
 
 
