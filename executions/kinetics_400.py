@@ -102,10 +102,14 @@ def train_maml():
             maml.save_model(path='saved_models/kinetics400/model', step=it)
 
     else:
-        maml.load_model(path='saved_models/ucf101/model-1000')
+        train_dataset, test_dataset = get_traditional_dataset(
+            num_train_actions=0,
+            base_address='/home/siavash/UCF-101/',
+            class_sample_size=CLASS_SAMPLE_SIZE,
+        )
+        maml.load_model(path='saved_models/kinetics400/model-1000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
-        print(test_dataset.actions[:5])
         test_data, test_labels = data['train']
         test_val_data, test_val_labels = data['validation']
 
