@@ -13,7 +13,7 @@ TRAIN = True
 NUM_CLASSES = 80
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 1
+NUM_GPUS = 10
 TRANSFER_LEARNING_ITERATIONS = 1001
 BATCH_SPLIT_NUM = 4
 
@@ -75,7 +75,7 @@ def transfer_learn():
 
     maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
     for it in range(TRANSFER_LEARNING_ITERATIONS):
-        data = train_dataset.next_batch(num_classes=80)
+        data = train_dataset.next_batch(num_classes=80, real_labels=True)
         batch_test_data, batch_test_labels = data['train']
         batch_test_val_data, batch_test_val_labels = data['validation']
         batch_split_size = int(NUM_CLASSES / BATCH_SPLIT_NUM)
@@ -93,7 +93,7 @@ def transfer_learn():
                 input_labels_ph: test_labels,
             })
 
-            if it % 1 == 0 and batch_split_index == 0:
+            if it % 50 == 0:
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 merged_summary = maml.sess.run(maml.merged, feed_dict={

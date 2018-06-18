@@ -1,5 +1,6 @@
 import os
 import random
+import copy
 import glob
 
 import cv2
@@ -28,6 +29,7 @@ def one_hot_vector(labels, concept_size):
 class TraditionalDataset(object):
     def __init__(self, actions, class_sample_size, base_address):
         self.num_actions = len(actions)
+        self.labels = copy.deepcopy(actions)
         self.actions = actions
         self.action_samples = {}
         self.action_samples_train = {}
@@ -72,7 +74,7 @@ class TraditionalDataset(object):
         for action in self.actions:
             self.shuffle_within_action(action)
 
-    def get_data_and_labels(self, files, num_classes):
+    def get_data_and_labels(self, files, num_classes, real_labels=False):
         """This function takes a list of list. Each list within the list corresponds to one class."""
         data = []
         labels = []
@@ -93,13 +95,18 @@ class TraditionalDataset(object):
 
                 video_frames = np.concatenate(video_frames).reshape(-1, 112, 112, 3)
                 data.append(video_frames)
-                labels.append(label_counter)
+                if real_labels:
+                    cur_label = sample[:sample.rindex('/', )]
+                    cur_label = cur_label[cur_label.rindex('/', ) + 1:]
+                    labels.append(self.labels.index(cur_label))
+                else:
+                    labels.append(label_counter)
             label_counter += 1
 
         return np.concatenate(data).reshape(-1, 16, 112, 112, 3), \
             one_hot_vector(np.array(labels).reshape(-1, 1), concept_size=num_classes)
 
-    def next_batch(self, num_classes):
+    def next_batch(self, num_classes, real_labels=False):
         action_begin = self.action_counter
         action_end = self.action_counter + num_classes
         if action_end <= self.num_actions:
@@ -122,8 +129,8 @@ class TraditionalDataset(object):
             validation_files.append(validation_samples)
 
         return {
-            'train': self.get_data_and_labels(train_files, num_classes),
-            'validation': self.get_data_and_labels(validation_files, num_classes),
+            'train': self.get_data_and_labels(train_files, num_classes, real_labels),
+            'validation': self.get_data_and_labels(validation_files, num_classes, real_labels),
         }
 
 
