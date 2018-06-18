@@ -10,22 +10,23 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101_transfer_learning/'
 TRAIN = True
-NUM_CLASSES = 2
+NUM_CLASSES = 80
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 10
+NUM_GPUS = 1
 TRANSFER_LEARNING_ITERATIONS = 1001
+BATCH_SPLIT_NUM = 4
 
 
 def print_accuracy(outputs, labels):
     # Because we have multiple GPUs, outputs will be of the shape N x 1 x N in numpy
     print('outputs:')
     print(outputs)
-    outputs_np = np.argmax(outputs, axis=2).reshape(-1, 2)
+    outputs_np = np.argmax(outputs, axis=2).reshape(-1, int(NUM_CLASSES * CLASS_SAMPLE_SIZE / BATCH_SPLIT_NUM))
     print(outputs_np)
     print('labels:')
     print(labels)
-    labels_np = np.argmax(labels.reshape(-1, 80), axis=1)
+    labels_np = np.argmax(labels.reshape(-1, NUM_CLASSES * CLASS_SAMPLE_SIZE), axis=1)
     print(labels_np)
 
     print('accuracy:')
@@ -77,10 +78,9 @@ def transfer_learn():
         data = train_dataset.next_batch(num_classes=80)
         batch_test_data, batch_test_labels = data['train']
         batch_test_val_data, batch_test_val_labels = data['validation']
-        batch_split_num = 4
-        batch_split_size = int(80 / batch_split_num)
+        batch_split_size = int(NUM_CLASSES / BATCH_SPLIT_NUM)
 
-        for batch_split_index in range(batch_split_num):
+        for batch_split_index in range(BATCH_SPLIT_NUM):
             start = batch_split_index * batch_split_size
             end = batch_split_index * batch_split_size + batch_split_size
             test_data = batch_test_data[start:end, :, :, :, :]
