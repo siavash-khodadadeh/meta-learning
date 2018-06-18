@@ -11,7 +11,7 @@ TRAIN = False
 NUM_CLASSES = 5
 UPDATE_BATCH_SIZE = 5
 META_BATCH_SIZE = 1
-MAML_TRAIN_ITERATIONS = 2001
+MAML_TRAIN_ITERATIONS = 5001
 MAML_ADAPTATION_ITERATIONS = 10
 
 def print_accuracy(outputs, labels):
@@ -67,8 +67,10 @@ def train_maml():
 
         it = 0
         for it in range(MAML_TRAIN_ITERATIONS):
-            maml.sess.run(maml.train_op)
-            maml.sess.run(maml.loss_func_op)
+            for k in range(10):
+                maml.sess.run(maml.train_op)
+            for k in range(10):
+                maml.sess.run(maml.loss_func_op)
 
             if it % 20 == 0:
                 merged_summary, _ = maml.sess.run((maml.merged, maml.train_op))
@@ -79,7 +81,7 @@ def train_maml():
             maml.save_model(path='../saved_models/omniglot_neural_loss/model', step=it)
 
     else:
-        maml.load_model('../saved_models/omniglot_neural_loss/model-2000')
+        maml.load_model('../saved_models/omniglot_neural_loss/model-5000')
         print('Start testing the network')
         test_batch, test_batch_labels, test_val_batch, test_val_batch_labels = maml.sess.run(
             (maml.input_data, maml.input_labels, maml.input_validation, maml.input_validation_labels)
@@ -101,11 +103,11 @@ def train_maml():
                 })
                 maml.file_writer.add_summary(summary, global_step=it)
 
-        outputs = maml.sess.run(maml.inner_model_out, feed_dict={
-            maml.input_data: test_val_batch,
-        })
+            outputs = maml.sess.run(maml.inner_model_out, feed_dict={
+                maml.input_data: test_val_batch,
+            })
 
-        print_accuracy(outputs, test_val_batch_labels)
+            print_accuracy(outputs, test_val_batch_labels)
 
     print('done')
 
