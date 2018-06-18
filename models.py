@@ -1,6 +1,7 @@
 import os
 
 import tensorflow as tf
+from tensorflow.python import debug as tf_debug
 
 from meta_layers import conv2d, dense, conv3d
 from utils import average_gradients
@@ -321,7 +322,8 @@ class ModelAgnosticMetaLearning(object):
             learning_rate=0.0001,
             gpu_devices=None,
             learn_the_loss_function=False,
-            train=True
+            train=True,
+            debug=False
     ):
         if gpu_devices is None:
             self.devices = '/gpu:0',
@@ -486,6 +488,9 @@ class ModelAgnosticMetaLearning(object):
 
         config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
         self.sess = tf.Session(config=config)
+        if debug:
+            self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "SSH:6000")
+
         self.sess.run(tf.global_variables_initializer())
 
     def loss_function(self, labels, logits):

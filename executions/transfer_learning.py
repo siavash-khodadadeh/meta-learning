@@ -13,7 +13,7 @@ TRAIN = True
 NUM_CLASSES = 2
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 1
+NUM_GPUS = 10
 TRANSFER_LEARNING_ITERATIONS = 1001
 
 
@@ -77,19 +77,23 @@ def transfer_learn():
         data = train_dataset.next_batch(num_classes=80)
         batch_test_data, batch_test_labels = data['train']
         batch_test_val_data, batch_test_val_labels = data['validation']
+        batch_split_num = 4
+        batch_split_size = int(80 / batch_split_num)
 
-        for batch_split in range(40):
-            test_data = batch_test_data[batch_split * 2: batch_split * 2 + 2, :, :, :, :]
-            test_labels = batch_test_labels[batch_split * 2: batch_split * 2 + 2, :]
-            test_val_data = batch_test_val_data[batch_split * 2: batch_split * 2 + 2, :, :, :, :]
-            test_val_labels = batch_test_val_labels[batch_split * 2: batch_split * 2 + 2, :]
+        for batch_split_index in range(batch_split_num):
+            start = batch_split_index * batch_split_size
+            end = batch_split_index * batch_split_size + batch_split_size
+            test_data = batch_test_data[start:end, :, :, :, :]
+            test_labels = batch_test_labels[start:end, :]
+            test_val_data = batch_test_val_data[start:end, :, :, :, :]
+            test_val_labels = batch_test_val_labels[start:end, :]
 
             maml.sess.run(maml.inner_train_ops, feed_dict={
                 input_data_ph: test_data,
                 input_labels_ph: test_labels,
             })
 
-            if it % 1 == 0 and batch_split == 0:
+            if it % 1 == 0 and batch_split_index == 0:
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
@@ -98,7 +102,14 @@ def transfer_learn():
                     val_data_ph: test_val_data,
                     val_labels_ph: test_val_labels,
                 }, options=run_options, run_metadata=run_metadata)
-                maml.file_writer.add_run_metadata(run_metadata, 'step%03d%03d' % (it, batch_split))
+
+                # from tensorflow.python.client import timeline
+                # fetched_timeline = timeline.Timeline(run_metadata.step_stats)
+                # chrome_trace = fetched_timeline.generate_chrome_trace_format()
+                # with open('timeline_01.json', 'w') as f:
+                #     f.write(chrome_trace)
+
+                # maml.file_writer.add_run_metadata(run_metadata, 'step%03d' % it, global_step=it)
                 maml.file_writer.add_summary(merged_summary, global_step=it)
                 print('gradient step: ')
                 print(it)
