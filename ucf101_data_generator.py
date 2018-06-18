@@ -103,7 +103,7 @@ class TraditionalDataset(object):
         action_begin = self.action_counter
         action_end = self.action_counter + num_classes
         if action_end <= self.num_actions:
-            action_classes = self.actions[action_begin: action_end]
+            action_classes = self.actions[action_begin:action_end]
             self.action_counter += num_classes
         else:
             action_classes = self.actions[action_begin:]
