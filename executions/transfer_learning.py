@@ -2,6 +2,7 @@ import os
 
 import tensorflow as tf
 import numpy as np
+import random
 
 from ucf101_data_generator import get_traditional_dataset
 from models import ModelAgnosticMetaLearning, C3DNetwork
@@ -14,38 +15,62 @@ NUM_CLASSES = 80
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 10
-TRANSFER_LEARNING_ITERATIONS = 1001
+TRANSFER_LEARNING_ITERATIONS = 401
 BATCH_SPLIT_NUM = 4
+
+
+random.seed(100)
+tf.set_random_seed(100)
 
 
 def print_accuracy(outputs, labels):
     # Because we have multiple GPUs, outputs will be of the shape N x 1 x N in numpy
     print('outputs:')
-    print(outputs)
+    # print(outputs)
     outputs_np = np.argmax(outputs, axis=2).reshape(-1, int(NUM_CLASSES * CLASS_SAMPLE_SIZE / BATCH_SPLIT_NUM))
     print(outputs_np)
     print('labels:')
-    print(labels)
+    # print(labels)
     labels_np = np.argmax(labels.reshape(-1, NUM_CLASSES * CLASS_SAMPLE_SIZE), axis=1)
     print(labels_np)
 
     print('accuracy:')
     acc_num = np.sum(outputs_np == labels_np)
-    acc = acc_num / (NUM_CLASSES * CLASS_SAMPLE_SIZE)
+    acc = acc_num / int(NUM_CLASSES * CLASS_SAMPLE_SIZE / BATCH_SPLIT_NUM)
     print(acc_num)
     print(acc)
+    return acc
 
 
 def transfer_learn():
-    test_actions = sorted(os.listdir(BASE_ADDRESS))[-21:]
-    for action in []:
-        test_actions.remove(action)
+    test_actions = [
+        'CleanAndJerk',
+        'MoppingFloor',
+        'FrontCrawl',
+        'Surfing',
+        'Bowling',
+        'SoccerPenalty',
+        'SumoWrestling',
+        'Shotput',
+        'PlayingSitar',
+        'FloorGymnastics',
+        'Typing',
+        'JumpingJack',
+        'ShavingBeard',
+        'FrisbeeCatch',
+        'WritingOnBoard',
+        'JavelinThrow',
+        'Fencing',
+        'FieldHockeyPenalty',
+        'BaseballPitch',
+        'CuttingInKitchen',
+        'Kayaking',
+    ]
 
     train_dataset, test_dataset = get_traditional_dataset(
-        num_train_actions=80,
         base_address=BASE_ADDRESS,
-        test_actions=test_actions,
         class_sample_size=CLASS_SAMPLE_SIZE,
+        test_actions=test_actions
     )
 
     with tf.variable_scope('train_data'):
@@ -74,7 +99,10 @@ def transfer_learn():
     )
 
     maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
+
     for it in range(TRANSFER_LEARNING_ITERATIONS):
+        print(it)
+
         data = train_dataset.next_batch(num_classes=80, real_labels=True)
         batch_test_data, batch_test_labels = data['train']
         batch_test_val_data, batch_test_val_labels = data['validation']
@@ -94,6 +122,12 @@ def transfer_learn():
             })
 
             if it % 50 == 0:
+                if batch_split_index == 0:
+                    val_accs = []
+
+                    if it % 100 == 0:
+                        maml.save_model('saved_models/transfer_learning/model', step=it)
+
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
@@ -102,24 +136,21 @@ def transfer_learn():
                     val_data_ph: test_val_data,
                     val_labels_ph: test_val_labels,
                 }, options=run_options, run_metadata=run_metadata)
-
-                # from tensorflow.python.client import timeline
-                # fetched_timeline = timeline.Timeline(run_metadata.step_stats)
-                # chrome_trace = fetched_timeline.generate_chrome_trace_format()
-                # with open('timeline_01.json', 'w') as f:
-                #     f.write(chrome_trace)
-
-                # maml.file_writer.add_run_metadata(run_metadata, 'step%03d' % it, global_step=it)
-                maml.file_writer.add_summary(merged_summary, global_step=it)
-                print('gradient step: ')
-                print(it)
+                maml.file_writer.add_summary(merged_summary, global_step=it + batch_split_index)
 
                 outputs = maml.sess.run(maml.inner_model_out, feed_dict={
                     maml.input_data: test_val_data,
                     maml.input_labels: test_val_labels,
                 })
 
-                print_accuracy(outputs, test_val_labels)
+                val_accs.append(print_accuracy(outputs, test_val_labels))\
+
+                if batch_split_index == BATCH_SPLIT_NUM - 1:
+                    print('iteration: {}'.format(it))
+                    print('Validation accuracy on all batches: ')
+                    print(np.mean(val_accs))
+
+    maml.save_model('saved_models/transfer_learning/model', step=it)
 
 
 if __name__ == '__main__':

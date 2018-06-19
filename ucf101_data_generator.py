@@ -55,7 +55,6 @@ class TraditionalDataset(object):
 
         self.sample_k_samples(k=class_sample_size)
         self.shuffle_actions()
-        # self.shuffle_within_actions()
 
     def sample_k_samples(self, k):
         for action in self.actions:
@@ -238,11 +237,25 @@ class DataSetUtils(object):
         return dataset
 
 
-def get_traditional_dataset(num_train_actions, base_address, train_actions=None, test_actions=None, class_sample_size=5):
-    if train_actions is None:
-        train_actions = sorted(os.listdir(base_address))[:num_train_actions]
-    if test_actions is None:
-        test_actions = sorted(os.listdir(base_address))[num_train_actions:]
+def get_traditional_dataset(
+        base_address,
+        class_sample_size,
+        num_train_actions=None,
+        train_actions=None,
+        test_actions=None):
+    actions = sorted(os.listdir(base_address))
+    if train_actions is None and test_actions is None:
+        random.shuffle(actions)
+        train_actions = actions[:num_train_actions]
+        test_actions = actions[num_train_actions:]
+    elif train_actions is None:
+        for action in test_actions:
+            actions.remove(action)
+        train_actions = actions
+    elif test_actions is None:
+        for action in train_actions:
+            actions.remove(action)
+        test_actions = actions
 
     train_dataset = TraditionalDataset(train_actions, class_sample_size=class_sample_size, base_address=base_address)
     test_dataset = TraditionalDataset(test_actions, class_sample_size=class_sample_size, base_address=base_address)
