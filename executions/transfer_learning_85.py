@@ -9,14 +9,14 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
-LOG_DIR = 'logs/ucf101_transfer_learning/'
+LOG_DIR = 'logs/ucf101_transfer_learning_85/'
 TRAIN = True
-NUM_CLASSES = 80
+NUM_CLASSES = 85
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 1
 TRANSFER_LEARNING_ITERATIONS = 401
-BATCH_SPLIT_NUM = 20
+BATCH_SPLIT_NUM = 17
 
 
 random.seed(100)
@@ -47,24 +47,24 @@ def transfer_learn():
         'CleanAndJerk',
         'MoppingFloor',
         'FrontCrawl',
-        'Surfing',
+        # 'Surfing',
         'Bowling',
         'SoccerPenalty',
         'SumoWrestling',
         'Shotput',
         'PlayingSitar',
         'FloorGymnastics',
-        'Typing',
+        # 'Typing',
         'JumpingJack',
         'ShavingBeard',
         'FrisbeeCatch',
         'WritingOnBoard',
         'JavelinThrow',
         'Fencing',
-        'FieldHockeyPenalty',
-        'BaseballPitch',
+        # 'FieldHockeyPenalty',
+        # 'BaseballPitch',
         'CuttingInKitchen',
-        'Kayaking',
+        # 'Kayaking',
     ]
 
     train_dataset, test_dataset = get_traditional_dataset(
@@ -75,12 +75,12 @@ def transfer_learn():
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 80])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 85])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 80])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 85])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
@@ -104,7 +104,7 @@ def transfer_learn():
     for it in range(TRANSFER_LEARNING_ITERATIONS):
         print(it)
 
-        data = train_dataset.next_batch(num_classes=80, real_labels=True)
+        data = train_dataset.next_batch(num_classes=85, real_labels=True)
         batch_test_data, batch_test_labels = data['train']
         batch_test_val_data, batch_test_val_labels = data['validation']
         batch_split_size = int(NUM_CLASSES / BATCH_SPLIT_NUM)
@@ -122,7 +122,7 @@ def transfer_learn():
                     val_accs = []
 
                     if it % 100 == 0:
-                        maml.save_model('saved_models/transfer_learning/model', step=it)
+                        maml.save_model('saved_models/transfer_learning_85/model', step=it)
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
@@ -151,7 +151,7 @@ def transfer_learn():
                 input_labels_ph: test_labels,
             })
 
-    maml.save_model('saved_models/transfer_learning/model', step=it)
+    maml.save_model('saved_models/transfer_learning_85/model', step=it)
 
 
 if __name__ == '__main__':

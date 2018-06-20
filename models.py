@@ -202,7 +202,7 @@ class C3DNetwork(object):
             self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
-            self.output = tf.layers.dense(self.dense2, 80, activation=None, name='dense3')
+            self.output = tf.layers.dense(self.dense2, 20, activation=None, name='dense3')
         else:
             self.conv1 = conv3d(
                 input_layer,
@@ -323,7 +323,8 @@ class ModelAgnosticMetaLearning(object):
             gpu_devices=None,
             learn_the_loss_function=False,
             train=True,
-            debug=False
+            debug=False,
+            log_device_placement=True
     ):
         if gpu_devices is None:
             self.devices = '/gpu:0',
@@ -486,7 +487,7 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver = tf.train.Saver()
 
-        config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+        config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device_placement)
         self.sess = tf.Session(config=config)
         if debug:
             self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "SSH:6000")

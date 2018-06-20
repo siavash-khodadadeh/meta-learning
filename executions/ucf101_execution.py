@@ -1,4 +1,5 @@
 import os
+import random
 
 import tensorflow as tf
 import numpy as np
@@ -10,10 +11,14 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
-NUM_CLASSES = 5
-CLASS_SAMPLE_SIZE = 4
+NUM_CLASSES = 20
+CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 10
+
+
+random.seed(100)
+tf.set_random_seed(100)
 
 
 def print_accuracy(outputs, labels):
@@ -35,15 +40,29 @@ def print_accuracy(outputs, labels):
 
 
 def train_maml():
-    test_actions = sorted(os.listdir(BASE_ADDRESS))[-21:]
-    for action in []:
-        test_actions.remove(action)
-
-    train_dataset, test_dataset = get_traditional_dataset(
-        num_train_actions=80,
-        test_actions=test_actions,
-        class_sample_size=CLASS_SAMPLE_SIZE,
-    )
+    test_actions = [
+        'CleanAndJerk',
+        'MoppingFloor',
+        'FrontCrawl',
+        'Surfing',
+        'Bowling',
+        'SoccerPenalty',
+        'SumoWrestling',
+        'Shotput',
+        'PlayingSitar',
+        'FloorGymnastics',
+        'Typing',
+        'JumpingJack',
+        'ShavingBeard',
+        'FrisbeeCatch',
+        'WritingOnBoard',
+        'JavelinThrow',
+        'Fencing',
+        'FieldHockeyPenalty',
+        'BaseballPitch',
+        'CuttingInKitchen',
+        'Kayaking',
+    ]
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
@@ -71,6 +90,12 @@ def train_maml():
     )
 
     if TRAIN:
+        train_dataset, test_dataset = get_traditional_dataset(
+            base_address=BASE_ADDRESS,
+            class_sample_size=CLASS_SAMPLE_SIZE,
+            test_actions=test_actions
+        )
+
         maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
         print('start meta training.')
 
@@ -101,6 +126,15 @@ def train_maml():
             maml.save_model(path='saved_models/ucf101/model', step=it)
 
     else:
+        random.shuffle(test_actions)
+        test_actions = test_actions[:5]
+
+        train_dataset, test_dataset = get_traditional_dataset(
+            base_address=BASE_ADDRESS,
+            class_sample_size=CLASS_SAMPLE_SIZE,
+            test_actions=test_actions
+        )
+
         maml.load_model(path='saved_models/ucf101/model-1000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=5)
@@ -131,6 +165,8 @@ def train_maml():
                 })
 
                 print_accuracy(outputs, test_val_labels)
+
+        maml.save_model('saved_models/ucf101-fit/model', step=it)
 
 
 if __name__ == '__main__':
