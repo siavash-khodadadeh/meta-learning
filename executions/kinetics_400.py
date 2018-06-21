@@ -76,7 +76,7 @@ def train_maml():
         print('start meta training.')
 
         it = 0
-        for it in range(1001):
+        for it in range(10001):
             data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
@@ -97,6 +97,9 @@ def train_maml():
                 val_data_ph: val_data,
                 val_labels_ph: val_labels,
             })
+
+            if it % 100 == 0:
+                maml.save_model(path='saved_models/kinetics400/model', step=it)
 
         if it != 0:
             maml.save_model(path='saved_models/kinetics400/model', step=it)
