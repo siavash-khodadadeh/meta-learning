@@ -463,6 +463,12 @@ class ModelAgnosticMetaLearning(object):
                                     tf.summary.histogram(grad_info[1].name, grad_info[0])
                             self.tower_neural_gradients.append(loss_gradients)
 
+        with tf.variable_scope('average_meta_loss'):
+            tf.summary.scalar(
+                'Meta Loss Average:',
+                tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+            )
+
         with tf.variable_scope('average_gradients'):
             with tf.device('/cpu:0'):
                 averaged_grads = average_gradients(self.tower_meta_grads)
