@@ -3,6 +3,9 @@ import os
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
 
+from gradient_checkpointing import gradients_speed as gradiii
+
+
 from meta_layers import conv2d, dense, conv3d
 from utils import average_gradients
 
@@ -202,7 +205,7 @@ class C3DNetwork(object):
             self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
-            self.output = tf.layers.dense(self.dense2, 20, activation=None, name='dense3')
+            self.output = tf.layers.dense(self.dense2, 9, activation=None, name='dense3')
         else:
             self.conv1 = conv3d(
                 input_layer,
@@ -399,7 +402,13 @@ class ModelAgnosticMetaLearning(object):
                         tf.summary.scalar('train_loss', train_loss)
 
                     with tf.variable_scope('gradients'):
-                        grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
+                        # grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
+                        for tensor in tf.trainable_variables():
+                            tf.add_to_collection('checkpoints', tensor)
+
+                        grads = gradiii(train_loss, self.model_variables)
+                        grads = list(zip(grads, self.model_variables))
+
                         self.inner_grads.append(grads)
 
                         for grad_info in grads:
@@ -445,7 +454,9 @@ class ModelAgnosticMetaLearning(object):
                         self.tower_meta_losses.append(meta_loss)
 
                     with tf.variable_scope('meta_optimizer'):
-                        gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
+                        # gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
+                        gradients = gradiii(meta_loss, self.model_variables)
+                        gradients = list(zip(gradients, self.model_variables))
 
                         for grad_info in gradients:
                             if grad_info[0] is not None:
