@@ -67,7 +67,16 @@ def evaluate():
             outputs = maml.sess.run(maml.inner_model_out, feed_dict={
                 maml.input_data: video,
             })
-            label = np.argmax(outputs, 2)
+
+            #  If doing Yogesh's suggestion
+            ind = np.argmax(
+                (outputs[0][0, 72], outputs[0][0, 79], outputs[0][0, 39], outputs[0][0, 24], outputs[0][0, 6])
+            )
+            label = [72, 79, 39, 24, 6][ind]
+
+            #  Otherwise
+            # label = np.argmax(outputs, 2)
+
             if label == TEST_ACTIONS[action]:
                 correct += 1
             count += 1

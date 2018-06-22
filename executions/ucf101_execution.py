@@ -11,10 +11,10 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
 TRAIN = True
-NUM_CLASSES = 20
+NUM_CLASSES = 9
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 10
+NUM_GPUS = 1
 
 
 random.seed(100)
@@ -66,12 +66,12 @@ def train_maml():
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, NUM_CLASSES])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, NUM_CLASSES])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
@@ -101,7 +101,7 @@ def train_maml():
 
         it = 0
         for it in range(1001):
-            data = train_dataset.next_batch(num_classes=5)
+            data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
@@ -137,7 +137,7 @@ def train_maml():
 
         maml.load_model(path='saved_models/ucf101/model-1000')
         print('Start testing the network')
-        data = test_dataset.next_batch(num_classes=5)
+        data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         print(test_dataset.actions[:5])
         test_data, test_labels = data['train']
         test_val_data, test_val_labels = data['validation']
