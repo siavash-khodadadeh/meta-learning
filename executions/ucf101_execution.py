@@ -10,8 +10,8 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
-TRAIN = True
-NUM_CLASSES = 9
+TRAIN = False
+NUM_CLASSES = 5
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 1
@@ -100,7 +100,7 @@ def train_maml():
         print('start meta training.')
 
         it = 0
-        for it in range(1001):
+        for it in range(301):
             data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
@@ -135,7 +135,7 @@ def train_maml():
             test_actions=test_actions
         )
 
-        maml.load_model(path='saved_models/ucf101/model-1000')
+        maml.load_model(path='saved_models/ucf101/model-300')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         print(test_dataset.actions[:5])
@@ -166,7 +166,7 @@ def train_maml():
 
                 print_accuracy(outputs, test_val_labels)
 
-        maml.save_model('saved_models/ucf101-fit/model', step=it)
+        maml.save_model('saved_models/ucf101-fit/model-unsupervised', step=it)
 
 
 if __name__ == '__main__':

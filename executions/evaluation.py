@@ -9,24 +9,25 @@ from ucf101_data_generator import TraditionalDataset
 LOG_DIR = 'logs/ucf101_transfer_learning/'
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
-SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
+# SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
-
-# TEST_ACTIONS = {
-#     'Surfing': 0,
-#     'Typing': 1,
-#     'Kayaking': 2,
-#     'FieldHockeyPenalty': 3,
-#     'BaseballPitch': 4,
-# }
+SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-4'
 
 TEST_ACTIONS = {
-    'Surfing': 72,
-    'Typing': 79,
-    'Kayaking': 39,
-    'FieldHockeyPenalty': 24,
-    'BaseballPitch': 6,
+    'Surfing': 0,
+    'Typing': 1,
+    'Kayaking': 2,
+    'FieldHockeyPenalty': 3,
+    'BaseballPitch': 4,
 }
+
+# TEST_ACTIONS = {
+#     'Surfing': 72,
+#     'Typing': 79,
+#     'Kayaking': 39,
+#     'FieldHockeyPenalty': 24,
+#     'BaseballPitch': 6,
+# }
 
 
 def evaluate():
@@ -69,13 +70,13 @@ def evaluate():
             })
 
             #  If doing Yogesh's suggestion
-            ind = np.argmax(
-                (outputs[0][0, 72], outputs[0][0, 79], outputs[0][0, 39], outputs[0][0, 24], outputs[0][0, 6])
-            )
-            label = [72, 79, 39, 24, 6][ind]
+            # ind = np.argmax(
+            #     (outputs[0][0, 72], outputs[0][0, 79], outputs[0][0, 39], outputs[0][0, 24], outputs[0][0, 6])
+            # )
+            # label = [72, 79, 39, 24, 6][ind]
 
             #  Otherwise
-            # label = np.argmax(outputs, 2)
+            label = np.argmax(outputs, 2)
 
             if label == TEST_ACTIONS[action]:
                 correct += 1
