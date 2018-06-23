@@ -41,10 +41,6 @@ def print_accuracy(outputs, labels):
 
 
 def train_maml():
-    test_actions = sorted(os.listdir(BASE_ADDRESS))[-21:]
-    for action in []:
-        test_actions.remove(action)
-
     train_dataset, test_dataset = get_traditional_dataset(
         num_train_actions=600,
         base_address=BASE_ADDRESS,
@@ -110,8 +106,29 @@ def train_maml():
             maml.save_model(path='saved_models/kinetics400/model', step=it)
 
     else:
-        random.shuffle(test_actions)
-        test_actions = test_actions
+        test_actions = [
+            'CleanAndJerk',
+            'MoppingFloor',
+            'FrontCrawl',
+            'Surfing',
+            'Bowling',
+            'SoccerPenalty',
+            'SumoWrestling',
+            'Shotput',
+            'PlayingSitar',
+            'FloorGymnastics',
+            'Typing',
+            'JumpingJack',
+            'ShavingBeard',
+            'FrisbeeCatch',
+            'WritingOnBoard',
+            'JavelinThrow',
+            'Fencing',
+            'FieldHockeyPenalty',
+            'BaseballPitch',
+            'CuttingInKitchen',
+            'Kayaking',
+        ]
         train_dataset, test_dataset = get_traditional_dataset(
             base_address='/home/siavash/UCF-101/',
             class_sample_size=CLASS_SAMPLE_SIZE,
