@@ -1,4 +1,5 @@
 import os
+import random
 
 import tensorflow as tf
 import numpy as np
@@ -11,10 +12,14 @@ BASE_ADDRESS = '/home/mkhan/kinetics_dataset2/clips/dataset/train/'
 
 LOG_DIR = 'logs/kinetics_400/'
 TRAIN = True
-NUM_CLASSES = 90
+NUM_CLASSES = 20
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 10
+
+
+random.seed(100)
+tf.set_random_seed(100)
 
 
 def print_accuracy(outputs, labels):
@@ -105,12 +110,15 @@ def train_maml():
             maml.save_model(path='saved_models/kinetics400/model', step=it)
 
     else:
+        random.shuffle(test_actions)
+        test_actions = test_actions
         train_dataset, test_dataset = get_traditional_dataset(
-            num_train_actions=0,
             base_address='/home/siavash/UCF-101/',
             class_sample_size=CLASS_SAMPLE_SIZE,
+            test_actions=test_actions
         )
-        maml.load_model(path='saved_models/kinetics400/model-1000')
+
+        maml.load_model(path='saved_models/kinetics400/model-10000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         test_data, test_labels = data['train']
@@ -139,6 +147,8 @@ def train_maml():
                 })
 
                 print_accuracy(outputs, test_val_labels)
+
+        maml.save_model('saved_models/ucf101-fit/model-kinetics-trained', step=it)
 
 
 if __name__ == '__main__':
