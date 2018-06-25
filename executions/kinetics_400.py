@@ -41,12 +41,6 @@ def print_accuracy(outputs, labels):
 
 
 def train_maml():
-    train_dataset, test_dataset = get_traditional_dataset(
-        num_train_actions=600,
-        base_address=BASE_ADDRESS,
-        class_sample_size=CLASS_SAMPLE_SIZE,
-    )
-
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
         input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, NUM_CLASSES])
@@ -69,10 +63,17 @@ def train_maml():
         gpu_devices=gpu_devices,
         meta_learn_rate=0.00001,
         learning_rate=0.001,
-        train=TRAIN
+        train=TRAIN,
+        log_device_placement=False
     )
 
     if TRAIN:
+        train_dataset, test_dataset = get_traditional_dataset(
+            num_train_actions=600,
+            base_address=BASE_ADDRESS,
+            class_sample_size=CLASS_SAMPLE_SIZE,
+        )
+
         maml.load_model(path='MAML/sports1m_pretrained.model', load_last_layer=False)
         print('start meta training.')
 
@@ -157,7 +158,7 @@ def train_maml():
             test_actions=test_actions
         )
 
-        maml.load_model(path='saved_models/kinetics400/model-8000')
+        maml.load_model(path='saved_models/kinetics400/model-5000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         test_data, test_labels = data['train']
