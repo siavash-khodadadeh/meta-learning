@@ -135,11 +135,13 @@ def train_maml():
             test_actions=test_actions
         )
 
-        maml.load_model(path='saved_models/kinetics400/model-10000')
+        maml.load_model(path='saved_models/kinetics400/model-5000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         test_data, test_labels = data['train']
         test_val_data, test_val_labels = data['validation']
+
+        print(test_dataset.actions)
 
         for it in range(5):
             maml.sess.run(maml.inner_train_ops, feed_dict={
