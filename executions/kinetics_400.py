@@ -158,7 +158,7 @@ def train_maml():
             test_actions=test_actions
         )
 
-        maml.load_model(path='saved_models/kinetics400/model-5000')
+        maml.load_model(path='saved_models/kinetics400/model-8000')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         test_data, test_labels = data['train']
