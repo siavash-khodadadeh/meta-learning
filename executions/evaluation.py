@@ -11,15 +11,8 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
-SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-4'
-
-TEST_ACTIONS = {
-    'Surfing': 0,
-    'Typing': 1,
-    'Kayaking': 2,
-    'FieldHockeyPenalty': 3,
-    'BaseballPitch': 4,
-}
+# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-4'
+SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-4'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -28,6 +21,62 @@ TEST_ACTIONS = {
 #     'FieldHockeyPenalty': 24,
 #     'BaseballPitch': 6,
 # }
+
+# TEST_ACTIONS = {
+#     'Surfing': 0,
+#     'Typing': 1,
+#     'Kayaking': 2,
+#     'FieldHockeyPenalty': 3,
+#     'BaseballPitch': 4,
+# }
+
+
+# TEST_ACTIONS = {
+#     'PlayingSitar': 0,
+#     'ShavingBeard': 1,
+#     'CuttingInKitchen': 2,
+#     'FloorGymnastics': 3,
+#     'CleanAndJerk': 4,
+#     'SumoWrestling': 5,
+#     'Bowling': 6,
+#     'Kayaking': 7,
+#     'Shotput': 8,
+#     'FrisbeeCatch': 9,
+#     'Fencing': 10,
+#     'MoppingFloor': 11,
+#     'JumpingJack': 12,
+#     'Surfing': 13,
+#     'SoccerPenalty': 14,
+#     'Typing': 15,
+#     'FieldHockeyPenalty': 16,
+#     'JavelinThrow': 17,
+#     'FrontCrawl': 18,
+#     'BaseballPitch': 19,
+# }
+
+
+TEST_ACTIONS = {
+    'FrisbeeCatch': 0,
+    'ShavingBeard': 1,
+    'CliffDiving': 2,
+    'BandMarching': 3,
+    'FloorGymnastics': 4,
+    'Fencing': 5,
+    'JavelinThrow': 6,
+    'Basketball': 7,
+    'Bowling': 8,
+    'PlayingPiano': 9,
+    'FieldHockeyPenalty': 10,
+    'WritingOnBoard': 11,
+    'Archery': 12,
+    'Typing': 13,
+    'BabyCrawling': 14,
+    'ApplyEyeMakeup': 15,
+    'Biking': 16,
+    'BlowDryHair': 17,
+    'CuttingInKitchen': 18,
+    'Billiards': 19,
+}
 
 
 def evaluate():
@@ -58,12 +107,14 @@ def evaluate():
     correct = 0
     count = 0
     for action in TEST_ACTIONS.keys():
+        class_label_counter = [0] * 20
+        print(action)
         for file_address in os.listdir(BASE_ADDRESS + action):
             video_address = BASE_ADDRESS + action + '/' + file_address
             if len(os.listdir(video_address)) < 16:
                 continue
 
-            video, _ = TraditionalDataset.get_data_and_labels(None, [[video_address]], num_classes=5)
+            video, _ = TraditionalDataset.get_data_and_labels(None, [[video_address]], num_classes=len(TEST_ACTIONS))
 
             outputs = maml.sess.run(maml.inner_model_out, feed_dict={
                 maml.input_data: video,
@@ -80,7 +131,12 @@ def evaluate():
 
             if label == TEST_ACTIONS[action]:
                 correct += 1
+
             count += 1
+            class_label_counter[label[0][0]] += 1
+
+        print(class_label_counter)
+        print(np.argmax(class_label_counter))
 
     print('Accuracy: ')
     print(float(correct) / count)

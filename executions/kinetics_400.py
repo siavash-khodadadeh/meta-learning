@@ -11,7 +11,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 BASE_ADDRESS = '/home/mkhan/kinetics_dataset2/clips/dataset/train/'
 
 LOG_DIR = 'logs/kinetics_400/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 20
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
@@ -79,11 +79,12 @@ def train_maml():
 
         it = 0
         for it in range(10001):
+            train_dataset.sample_k_samples()
             data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
-            if it % 20 == 0:
+            if it % 50 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
                     input_data_ph: tr_data,
                     input_labels_ph: tr_labels,
@@ -100,7 +101,7 @@ def train_maml():
                 val_labels_ph: val_labels,
             })
 
-            if it % 100 == 0:
+            if it % 200 == 0:
                 maml.save_model(path='saved_models/kinetics400/model', step=it)
 
         if it != 0:

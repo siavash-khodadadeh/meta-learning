@@ -34,6 +34,7 @@ class TraditionalDataset(object):
         self.action_samples = {}
         self.action_samples_train = {}
         self.action_samples_validation = {}
+        self.class_sample_size = class_sample_size
 
         for action_directory in self.actions:
             action_path = os.path.join(base_address, action_directory)
@@ -53,15 +54,18 @@ class TraditionalDataset(object):
         self.action_counter = 0
         self.within_class_counter = {action: 0 for action in self.actions}
 
-        self.sample_k_samples(k=class_sample_size)
+        self.sample_k_samples()
         self.shuffle_actions()
 
-    def sample_k_samples(self, k):
+    def sample_k_samples(self, k=None):
+        if k is None:
+            k = self.class_sample_size
+
         for action in self.actions:
             self.shuffle_within_action(action)
-            self.action_samples[action] = self.action_samples[action][:2 * k]
-            self.action_samples_train[action] = self.action_samples[action][:k]
-            self.action_samples_validation[action] = self.action_samples[action][k:]
+            action_samples = self.action_samples[action][:2 * k]
+            self.action_samples_train[action] = action_samples[:k]
+            self.action_samples_validation[action] = action_samples[k:]
 
     def shuffle_actions(self):
         random.shuffle(self.actions)
