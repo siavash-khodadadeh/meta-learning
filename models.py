@@ -445,7 +445,11 @@ class ModelAgnosticMetaLearning(object):
                         self.tower_meta_losses.append(meta_loss)
 
                     with tf.variable_scope('meta_optimizer'):
-                        gradients = meta_optimizer.compute_gradients(meta_loss, var_list=self.model_variables)
+                        gradients = meta_optimizer.compute_gradients(
+                            meta_loss,
+                            var_list=self.model_variables,
+                            colocate_gradients_with_ops=True
+                        )
 
                         for grad_info in gradients:
                             if grad_info[0] is not None:
