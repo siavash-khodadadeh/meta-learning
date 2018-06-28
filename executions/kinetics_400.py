@@ -11,7 +11,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 BASE_ADDRESS = '/home/mkhan/kinetics_dataset2/clips/dataset/train/'
 
 LOG_DIR = 'logs/kinetics_400/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 20
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
@@ -61,7 +61,7 @@ def train_maml():
         val_labels_ph,
         log_dir=LOG_DIR,
         gpu_devices=gpu_devices,
-        meta_learn_rate=0.00001,
+        meta_learn_rate=0.0001,
         learning_rate=0.001,
         train=TRAIN,
         log_device_placement=False

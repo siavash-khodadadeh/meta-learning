@@ -136,6 +136,20 @@ class TraditionalDataset(object):
             'validation': self.get_data_and_labels(validation_files, num_classes, real_labels),
         }
 
+    def next_batch_without_labels_information(self, num_classes):
+        all_actions = []
+        for actions in self.action_samples:
+            all_actions.extend(actions)
+
+        random.shuffle(all_actions)
+        all_actions = all_actions[:num_classes]
+
+        data = self.get_data_and_labels(all_actions, num_classes, False),
+        return {
+            'train': data,
+            'validation': data
+        }
+
 
 class DataSetUtils(object):
     def create_tfrecord_dataset(self, base_address):

@@ -12,7 +12,7 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-4'
-SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-4'
+SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
