@@ -51,12 +51,12 @@ def transfer_learn():
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 80])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 100])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 80])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 100])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
@@ -85,6 +85,7 @@ def transfer_learn():
         if it % 100 == 0:
             maml.save_model('saved_models/transfer_learning/model', step=it)
 
+        if it % 20 == 0:
             merged_summary = maml.sess.run(maml.merged, feed_dict={
                 input_data_ph: data,
                 input_labels_ph: labels,
