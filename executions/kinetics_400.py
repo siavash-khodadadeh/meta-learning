@@ -191,7 +191,7 @@ def train_maml():
 
                 print_accuracy(outputs, test_val_labels)
 
-        maml.save_model('saved_models/ucf101-fit/model-kinetics-trained', step=it)
+            maml.save_model('saved_models/ucf101-fit/model-kinetics-trained', step=it)
 
 
 if __name__ == '__main__':
