@@ -175,7 +175,7 @@ class TraditionalDataset(object):
             labels.append(self.extract_label_information(action))
 
         data, _ = self.get_data_and_labels(final_actions_list, batch_size, False)
-        return data, labels
+        return data, one_hot_vector(np.array(labels).reshape(-1, 1), concept_size=400)
 
 
 class DataSetUtils(object):
