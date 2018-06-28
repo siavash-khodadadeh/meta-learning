@@ -406,6 +406,12 @@ class ModelAgnosticMetaLearning(object):
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
+        with tf.variable_scope('average_inner_loss'):
+            tf.summary.scalar(
+                'Inner Loss Average:',
+                tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+            )
+
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/cpu:0'):
                 averaged_inner_gradients = average_gradients(self.inner_grads)
