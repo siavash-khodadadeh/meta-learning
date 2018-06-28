@@ -99,15 +99,19 @@ class TraditionalDataset(object):
                 video_frames = np.concatenate(video_frames).reshape(-1, 112, 112, 3)
                 data.append(video_frames)
                 if real_labels:
-                    cur_label = sample[:sample.rindex('/', )]
-                    cur_label = cur_label[cur_label.rindex('/', ) + 1:]
-                    labels.append(self.labels.index(cur_label))
+                    label = self.extract_label_information(sample)
+                    labels.append(label)
                 else:
                     labels.append(label_counter)
             label_counter += 1
 
         return np.concatenate(data).reshape(-1, 16, 112, 112, 3), \
             one_hot_vector(np.array(labels).reshape(-1, 1), concept_size=num_classes)
+
+    def extract_label_information(self, sample):
+        cur_label = sample[:sample.rindex('/', )]
+        cur_label = cur_label[cur_label.rindex('/', ) + 1:]
+        return self.labels.index(cur_label)
 
     def next_batch(self, num_classes, real_labels=False):
         action_begin = self.action_counter
@@ -138,17 +142,40 @@ class TraditionalDataset(object):
 
     def next_batch_without_labels_information(self, num_classes):
         all_actions = []
-        for actions in self.action_samples:
-            all_actions.extend(actions)
+        for actions_list in self.action_samples.values():
+            all_actions.extend(actions_list)
 
         random.shuffle(all_actions)
-        all_actions = all_actions[:num_classes]
+        sampled_actions = all_actions[:num_classes]
 
-        data = self.get_data_and_labels(all_actions, num_classes, False),
+        final_actions_list = []
+
+        for action in sampled_actions:
+            final_actions_list.append([action])
+
+        data_and_labels = self.get_data_and_labels(final_actions_list, num_classes, False)
         return {
-            'train': data,
-            'validation': data
+            'train': data_and_labels,
+            'validation': data_and_labels,
         }
+
+    def next_simple_batch(self, batch_size):
+        all_actions = []
+        for actions_list in self.action_samples.values():
+            all_actions.extend(actions_list)
+
+        random.shuffle(all_actions)
+        sampled_actions = all_actions[:batch_size]
+
+        final_actions_list = []
+        labels = []
+
+        for action in sampled_actions:
+            final_actions_list.append([action])
+            labels.append(self.extract_label_information(action))
+
+        data, _ = self.get_data_and_labels(final_actions_list, batch_size, False)
+        return data, labels
 
 
 class DataSetUtils(object):

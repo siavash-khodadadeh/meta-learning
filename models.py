@@ -202,7 +202,7 @@ class C3DNetwork(object):
             self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
-            self.output = tf.layers.dense(self.dense2, 20, activation=None, name='dense3')
+            self.output = tf.layers.dense(self.dense2, 400, activation=None, name='dense3')
         else:
             self.conv1 = conv3d(
                 input_layer,

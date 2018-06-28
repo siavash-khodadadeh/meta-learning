@@ -11,8 +11,8 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
-# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-4'
-SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
+SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
+# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -22,13 +22,13 @@ SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
 #     'BaseballPitch': 6,
 # }
 
-# TEST_ACTIONS = {
-#     'Surfing': 0,
-#     'Typing': 1,
-#     'Kayaking': 2,
-#     'FieldHockeyPenalty': 3,
-#     'BaseballPitch': 4,
-# }
+TEST_ACTIONS = {
+    'Surfing': 0,
+    'Typing': 1,
+    'Kayaking': 2,
+    'FieldHockeyPenalty': 3,
+    'BaseballPitch': 4,
+}
 
 
 # TEST_ACTIONS = {
@@ -55,28 +55,28 @@ SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
 # }
 
 
-TEST_ACTIONS = {
-    'FrisbeeCatch': 0,
-    'ShavingBeard': 1,
-    'CliffDiving': 2,
-    'BandMarching': 3,
-    'FloorGymnastics': 4,
-    'Fencing': 5,
-    'JavelinThrow': 6,
-    'Basketball': 7,
-    'Bowling': 8,
-    'PlayingPiano': 9,
-    'FieldHockeyPenalty': 10,
-    'WritingOnBoard': 11,
-    'Archery': 12,
-    'Typing': 13,
-    'BabyCrawling': 14,
-    'ApplyEyeMakeup': 15,
-    'Biking': 16,
-    'BlowDryHair': 17,
-    'CuttingInKitchen': 18,
-    'Billiards': 19,
-}
+# TEST_ACTIONS = {
+#     'FrisbeeCatch': 0,
+#     'ShavingBeard': 1,
+#     'CliffDiving': 2,
+#     'BandMarching': 3,
+#     'FloorGymnastics': 4,
+#     'Fencing': 5,
+#     'JavelinThrow': 6,
+#     'Basketball': 7,
+#     'Bowling': 8,
+#     'PlayingPiano': 9,
+#     'FieldHockeyPenalty': 10,
+#     'WritingOnBoard': 11,
+#     'Archery': 12,
+#     'Typing': 13,
+#     'BabyCrawling': 14,
+#     'ApplyEyeMakeup': 15,
+#     'Biking': 16,
+#     'BlowDryHair': 17,
+#     'CuttingInKitchen': 18,
+#     'Billiards': 19,
+# }
 
 
 def evaluate():
@@ -107,7 +107,7 @@ def evaluate():
     correct = 0
     count = 0
     for action in TEST_ACTIONS.keys():
-        class_label_counter = [0] * 20
+        class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
         for file_address in os.listdir(BASE_ADDRESS + action):
             video_address = BASE_ADDRESS + action + '/' + file_address

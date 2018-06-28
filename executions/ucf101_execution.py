@@ -86,7 +86,8 @@ def train_maml():
         gpu_devices=gpu_devices,
         meta_learn_rate=0.00001,
         learning_rate=0.001,
-        train=TRAIN
+        train=TRAIN,
+        log_device_placement=False
     )
 
     if TRAIN:
@@ -135,7 +136,7 @@ def train_maml():
             test_actions=test_actions
         )
 
-        maml.load_model(path='saved_models/ucf101/model-300')
+        maml.load_model(path='saved_models/ucf101/model-100')
         print('Start testing the network')
         data = test_dataset.next_batch(num_classes=NUM_CLASSES)
         print(test_dataset.actions[:5])
@@ -166,7 +167,7 @@ def train_maml():
 
                 print_accuracy(outputs, test_val_labels)
 
-        maml.save_model('saved_models/ucf101-fit/model-unsupervised', step=it)
+            maml.save_model('saved_models/ucf101-fit/model-unsupervised', step=it)
 
 
 if __name__ == '__main__':
