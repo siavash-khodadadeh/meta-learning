@@ -448,7 +448,7 @@ class ModelAgnosticMetaLearning(object):
                         gradients = meta_optimizer.compute_gradients(
                             meta_loss,
                             var_list=self.model_variables,
-                            colocate_gradients_with_ops=True
+                            colocate_gradients_with_ops=False
                         )
 
                         for grad_info in gradients:
