@@ -377,7 +377,7 @@ class ModelAgnosticMetaLearning(object):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
                     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-                        model = self.model_cls(input_data, num_classes)
+                        model = self.model_cls(input_data, num_classes=num_classes)
                         model_out_train = model.output
                         self.inner_model_out.append(model_out_train)
                         self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
@@ -434,7 +434,7 @@ class ModelAgnosticMetaLearning(object):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
                     with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
-                        updated_model = self.model_cls(input_validation, updated_vars)
+                        updated_model = self.model_cls(input_validation, weights=updated_vars)
                         model_out_validation = updated_model.output
 
                     with tf.variable_scope('meta_loss'):
