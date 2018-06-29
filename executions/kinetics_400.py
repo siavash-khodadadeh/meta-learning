@@ -12,10 +12,10 @@ BASE_ADDRESS = '/home/mkhan/kinetics_dataset2/clips/dataset/train/'
 
 LOG_DIR = 'logs/kinetics_400/'
 TRAIN = True
-NUM_CLASSES = 20
+NUM_CLASSES = 9
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
-NUM_GPUS = 10
+NUM_GPUS = 1
 
 
 random.seed(100)
@@ -64,7 +64,8 @@ def train_maml():
         meta_learn_rate=0.0001,
         learning_rate=0.001,
         train=TRAIN,
-        log_device_placement=False
+        log_device_placement=False,
+        num_classes=NUM_CLASSES
     )
 
     if TRAIN:

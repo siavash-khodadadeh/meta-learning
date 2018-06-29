@@ -8,7 +8,7 @@ from utils import average_gradients
 
 
 class NeuralNetwork(object):
-    def __init__(self, input_layer, weights=None):
+    def __init__(self, input_layer, weights=None, num_classes=5):
         if weights is None:
             self.conv1 = tf.layers.conv2d(
                 input_layer,
@@ -52,7 +52,7 @@ class NeuralNetwork(object):
 
             self.flatten = tf.layers.flatten(self.maxpool4)
             self.dense = tf.layers.dense(self.flatten, 50, activation=tf.nn.relu, name='dense1')
-            self.output = tf.layers.dense(self.dense, 5, activation=None, name='dense2')
+            self.output = tf.layers.dense(self.dense, num_classes, activation=None, name='dense2')
 
         else:
             self.conv1 = conv2d(
@@ -113,7 +113,7 @@ class NeuralNetwork(object):
 
 
 class C3DNetwork(object):
-    def __init__(self, input_layer, weights=None):
+    def __init__(self, input_layer, weights=None, num_classes=None):
         if weights is None:
             self.conv1 = tf.layers.conv3d(
                 input_layer,
@@ -197,12 +197,11 @@ class C3DNetwork(object):
             )
             self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
-            # self.transpose = tf.transpose(self.maxpool5, perm=[0, 1, 4, 2, 3])
             self.transpose = tf.transpose(self.maxpool5, (0, 1, 4, 2, 3))
             self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
-            self.output = tf.layers.dense(self.dense2, 20, activation=None, name='dense3')
+            self.output = tf.layers.dense(self.dense2, num_classes, activation=None, name='dense3')
         else:
             self.conv1 = conv3d(
                 input_layer,
@@ -324,7 +323,8 @@ class ModelAgnosticMetaLearning(object):
             learn_the_loss_function=False,
             train=True,
             debug=False,
-            log_device_placement=True
+            log_device_placement=True,
+            num_classes=None
     ):
         if gpu_devices is None:
             self.devices = '/gpu:0',
@@ -376,12 +376,8 @@ class ModelAgnosticMetaLearning(object):
         ):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    # with tf.variable_scope('input_data'):
-                    #     tf.summary.image('train_image', input_data[:, 0, :, :, :], max_outputs=30)
-                    #     tf.summary.image('validation_image', input_validation[:, 0, :, :, :], max_outputs=30)
-
                     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-                        model = self.model_cls(input_data)
+                        model = self.model_cls(input_data, num_classes)
                         model_out_train = model.output
                         self.inner_model_out.append(model_out_train)
                         self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
@@ -437,10 +433,6 @@ class ModelAgnosticMetaLearning(object):
 
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    # with tf.variable_scope('input_meta_data'):
-                    #     tf.summary.image('train_meta_image', input_data[:, 0, :, :, :], max_outputs=5)
-                    #     tf.summary.image('validation_meta_image', input_validation[:, 0, :, :, :], max_outputs=5)
-
                     with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
                         updated_model = self.model_cls(input_validation, updated_vars)
                         model_out_validation = updated_model.output
@@ -535,6 +527,6 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver.restore(self.sess, path)
 
-    def meta_train(self):
-        for it in range(100):
+    def meta_train(self, num_iterations):
+        for it in range(num_iterations):
             self.sess.run(self.train_op)
