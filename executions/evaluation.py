@@ -9,9 +9,10 @@ from ucf101_data_generator import TraditionalDataset
 LOG_DIR = 'logs/ucf101_transfer_learning/'
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
+SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_to_20_classes/model-400'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
-SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
+# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
 
 # TEST_ACTIONS = {
@@ -22,14 +23,36 @@ SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 #     'BaseballPitch': 6,
 # }
 
-TEST_ACTIONS = {
-    'Surfing': 0,
-    'Typing': 1,
-    'Kayaking': 2,
-    'FieldHockeyPenalty': 3,
-    'BaseballPitch': 4,
-}
+# TEST_ACTIONS = {
+#     'Surfing': 0,
+#     'Typing': 1,
+#     'Kayaking': 2,
+#     'FieldHockeyPenalty': 3,
+#     'BaseballPitch': 4,
+# }
 
+TEST_ACTIONS = {
+    'SoccerPenalty': 0,
+    'Kayaking': 1,
+    'Shotput': 2,
+    'Typing': 3,
+    'Bowling': 4,
+    'WritingOnBoard': 5,
+    'FrontCrawl': 6,
+    'JavelinThrow': 7,
+    'Surfing': 8,
+    'ShavingBeard': 9,
+    'CleanAndJerk': 10,
+    'BaseballPitch': 11,
+    'FrisbeeCatch': 12,
+    'SumoWrestling': 13,
+    'CuttingInKitchen': 14,
+    'PlayingSitar': 15,
+    'FloorGymnastics': 16,
+    'Fencing': 17,
+    'FieldHockeyPenalty': 18,
+    'MoppingFloor': 19,
+}
 
 # TEST_ACTIONS = {
 #     'PlayingSitar': 0,
@@ -82,12 +105,12 @@ TEST_ACTIONS = {
 def evaluate():
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
