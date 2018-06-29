@@ -7,7 +7,7 @@ from models import ModelAgnosticMetaLearning, NeuralNetwork
 
 
 LOG_DIR = 'logs/omniglot/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 5
 UPDATE_BATCH_SIZE = 5
 META_BATCH_SIZE = 1
@@ -24,14 +24,14 @@ def train_maml():
         input_data_ph = tf.slice(image_tensor, [0, 0, 0], [-1, NUM_CLASSES * UPDATE_BATCH_SIZE, -1], name='train')
         input_labels_ph = tf.slice(label_tensor, [0, 0, 0], [-1, NUM_CLASSES * UPDATE_BATCH_SIZE, -1], name='labels')
         input_data_ph = tf.reshape(input_data_ph, (-1, 28, 28, 1))
-        input_labels_ph = tf.reshape(input_labels_ph, (-1, 5))
+        input_labels_ph = tf.reshape(input_labels_ph, (-1, NUM_CLASSES))
         tf.summary.image('train', input_data_ph, max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.slice(image_tensor, [0, NUM_CLASSES * UPDATE_BATCH_SIZE, 0], [-1, -1, -1], name='validation')
         val_labels_ph = tf.slice(label_tensor, [0, NUM_CLASSES * UPDATE_BATCH_SIZE, 0], [-1, -1, -1], name='val_labels')
         val_data_ph = tf.reshape(val_data_ph, (-1, 28, 28, 1))
-        val_labels_ph = tf.reshape(val_labels_ph, (-1, 5))
+        val_labels_ph = tf.reshape(val_labels_ph, (-1, NUM_CLASSES))
         tf.summary.image('validation', val_data_ph, max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
@@ -43,7 +43,9 @@ def train_maml():
         log_dir=LOG_DIR,
         learning_rate=0.001,
         meta_learn_rate=0.0001,
-        train=TRAIN
+        train=TRAIN,
+        num_classes=NUM_CLASSES,
+        log_device_placement=False
     )
     tf.train.start_queue_runners(maml.sess)
 
