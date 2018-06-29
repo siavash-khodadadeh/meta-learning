@@ -496,6 +496,7 @@ class ModelAgnosticMetaLearning(object):
         self.saver = tf.train.Saver()
 
         config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device_placement)
+        config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=config)
         if debug:
             self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "SSH:6000")
