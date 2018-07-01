@@ -395,7 +395,11 @@ class ModelAgnosticMetaLearning(object):
                         tf.summary.scalar('train_loss', train_loss)
 
                     with tf.variable_scope('gradients'):
-                        grads = optimizer.compute_gradients(train_loss, var_list=self.model_variables)
+                        grads = optimizer.compute_gradients(
+                            train_loss,
+                            var_list=self.model_variables,
+                            colocate_gradients_with_ops=True
+                        )
                         self.inner_grads.append(grads)
 
                         for grad_info in grads:
@@ -409,8 +413,8 @@ class ModelAgnosticMetaLearning(object):
             )
 
         with tf.variable_scope('average_inner_gradients'):
-            with tf.device('/cpu:0'):
-                averaged_inner_gradients = average_gradients(self.inner_grads)
+            # with tf.device('/cpu:0'):
+            averaged_inner_gradients = average_gradients(self.inner_grads)
 
             updated_vars = {}
             for grad_info in averaged_inner_gradients:
@@ -446,7 +450,7 @@ class ModelAgnosticMetaLearning(object):
                         gradients = meta_optimizer.compute_gradients(
                             meta_loss,
                             var_list=self.model_variables,
-                            colocate_gradients_with_ops=False
+                            colocate_gradients_with_ops=True
                         )
 
                         for grad_info in gradients:
@@ -472,8 +476,8 @@ class ModelAgnosticMetaLearning(object):
             )
 
         with tf.variable_scope('average_gradients'):
-            with tf.device('/cpu:0'):
-                averaged_grads = average_gradients(self.tower_meta_grads)
+            # with tf.device('/cpu:0'):
+            averaged_grads = average_gradients(self.tower_meta_grads)
 
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
