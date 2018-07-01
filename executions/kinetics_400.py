@@ -12,7 +12,7 @@ BASE_ADDRESS = '/home/mkhan/kinetics_dataset2/clips/dataset/train/'
 
 LOG_DIR = 'logs/kinetics_400/'
 TRAIN = True
-NUM_CLASSES = 90
+NUM_CLASSES = 20
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
 NUM_GPUS = 10

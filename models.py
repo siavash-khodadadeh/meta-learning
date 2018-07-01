@@ -407,23 +407,25 @@ class ModelAgnosticMetaLearning(object):
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
         with tf.variable_scope('average_inner_loss'):
-            tf.summary.scalar(
-                'Inner Loss Average:',
-                tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
-            )
+            with tf.device('/cpu:0'):
+                tf.summary.scalar(
+                    'Inner Loss Average:',
+                    tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+                )
 
         with tf.variable_scope('average_inner_gradients'):
-            # with tf.device('/cpu:0'):
-            averaged_inner_gradients = average_gradients(self.inner_grads)
+            with tf.device('/cpu:0'):
+                averaged_inner_gradients = average_gradients(self.inner_grads)
 
-            updated_vars = {}
-            for grad_info in averaged_inner_gradients:
-                if grad_info[0] is not None:
-                    updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
-                else:
-                    updated_vars[grad_info[1].name[6:]] = grad_info[1]
+            with tf.device('/cpu:0'):
+                updated_vars = {}
+                for grad_info in averaged_inner_gradients:
+                    if grad_info[0] is not None:
+                        updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
+                    else:
+                        updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
-                self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
+                    self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
@@ -470,14 +472,15 @@ class ModelAgnosticMetaLearning(object):
                             self.tower_neural_gradients.append(loss_gradients)
 
         with tf.variable_scope('average_meta_loss'):
-            tf.summary.scalar(
-                'Meta Loss Average:',
-                tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
-            )
+            with tf.device('/cpu:0'):
+                tf.summary.scalar(
+                    'Meta Loss Average:',
+                    tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+                )
 
         with tf.variable_scope('average_gradients'):
-            # with tf.device('/cpu:0'):
-            averaged_grads = average_gradients(self.tower_meta_grads)
+            with tf.device('/cpu:0'):
+                averaged_grads = average_gradients(self.tower_meta_grads)
 
             self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
@@ -485,8 +488,9 @@ class ModelAgnosticMetaLearning(object):
                 averaged_neural_grads = average_gradients(self.tower_neural_gradients)
                 self.loss_func_op = neural_loss_optimizer.apply_gradients(averaged_neural_grads)
 
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.name, var)
+        with tf.device('/cpu:0'):
+            for var in tf.trainable_variables():
+                tf.summary.histogram(var.name, var)
 
         self.log_dir = log_dir + ('train/' if train else 'test/')
         if os.path.exists(self.log_dir):
