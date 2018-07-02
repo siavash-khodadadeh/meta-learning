@@ -353,6 +353,7 @@ class ModelAgnosticMetaLearning(object):
             self.tower_neural_gradients = []
 
         # Split data such that each part runs on a different GPU
+        self.devices = gpu_devices[1:]
         num_gpu_devices = len(self.devices)
 
         input_data_splits = tf.split(self.input_data, num_gpu_devices)
