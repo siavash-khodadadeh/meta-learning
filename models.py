@@ -353,7 +353,6 @@ class ModelAgnosticMetaLearning(object):
             self.tower_neural_gradients = []
 
         # Split data such that each part runs on a different GPU
-        self.devices = gpu_devices[1:]
         num_gpu_devices = len(self.devices)
 
         input_data_splits = tf.split(self.input_data, num_gpu_devices)
@@ -483,7 +482,8 @@ class ModelAgnosticMetaLearning(object):
             with tf.device('/cpu:0'):
                 averaged_grads = average_gradients(self.tower_meta_grads)
 
-                self.train_op = meta_optimizer.apply_gradients(averaged_grads)
+                # self.train_op = meta_optimizer.apply_gradients(averaged_grads)
+                self.train_op = averaged_grads
 
             if learn_the_loss_function:
                 averaged_neural_grads = average_gradients(self.tower_neural_gradients)
