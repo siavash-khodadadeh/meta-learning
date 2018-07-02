@@ -482,8 +482,7 @@ class ModelAgnosticMetaLearning(object):
             with tf.device('/cpu:0'):
                 averaged_grads = average_gradients(self.tower_meta_grads)
 
-                # self.train_op = meta_optimizer.apply_gradients(averaged_grads)
-                self.train_op = averaged_grads
+                self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
             if learn_the_loss_function:
                 averaged_neural_grads = average_gradients(self.tower_neural_gradients)
