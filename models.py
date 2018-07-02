@@ -406,12 +406,12 @@ class ModelAgnosticMetaLearning(object):
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
-        with tf.variable_scope('average_inner_loss'):
-            with tf.device('/cpu:0'):
-                tf.summary.scalar(
-                    'Inner Loss Average:',
-                    tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
-                )
+        # with tf.variable_scope('average_inner_loss'):
+        #     with tf.device('/cpu:0'):
+        #         tf.summary.scalar(
+        #             'Inner Loss Average:',
+        #             tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+        #         )
 
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/cpu:0'):
@@ -471,12 +471,12 @@ class ModelAgnosticMetaLearning(object):
                                     tf.summary.histogram(grad_info[1].name, grad_info[0])
                             self.tower_neural_gradients.append(loss_gradients)
 
-        with tf.variable_scope('average_meta_loss'):
-            with tf.device('/cpu:0'):
-                tf.summary.scalar(
-                    'Meta Loss Average:',
-                    tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
-                )
+        # with tf.variable_scope('average_meta_loss'):
+        #     with tf.device('/cpu:0'):
+        #         tf.summary.scalar(
+        #             'Meta Loss Average:',
+        #             tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
+        #         )
 
         with tf.variable_scope('average_gradients'):
             with tf.device('/cpu:0'):
