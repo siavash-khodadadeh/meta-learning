@@ -65,7 +65,7 @@ def train_maml():
         learning_rate=0.001,
         train=TRAIN,
         log_device_placement=False,
-        num_classes=NUM_CLASSES
+        num_classes=101
     )
 
     if TRAIN:

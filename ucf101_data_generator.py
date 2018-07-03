@@ -113,16 +113,19 @@ class TraditionalDataset(object):
         cur_label = cur_label[cur_label.rindex('/', ) + 1:]
         return self.labels.index(cur_label)
 
-    def next_batch(self, num_classes, real_labels=False):
+    def next_batch(self, meta_batch_size, num_classes=None, real_labels=False):
+        if num_classes is None:
+            num_classes = meta_batch_size
+
         action_begin = self.action_counter
-        action_end = self.action_counter + num_classes
+        action_end = self.action_counter + meta_batch_size
         if action_end <= self.num_actions:
             action_classes = self.actions[action_begin:action_end]
-            self.action_counter += num_classes
+            self.action_counter += meta_batch_size
         else:
             action_classes = self.actions[action_begin:]
             self.shuffle_actions()
-            required_num_classes = num_classes - len(action_classes)
+            required_num_classes = meta_batch_size - len(action_classes)
             action_classes.extend(self.actions[0: required_num_classes])
             self.action_counter += required_num_classes
 
