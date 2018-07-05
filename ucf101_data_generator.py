@@ -26,6 +26,27 @@ def one_hot_vector(labels, concept_size):
     return to_categorical(labels, concept_size)
 
 
+class Dataset(object):
+    def __init__(self, actions, base_address):
+        self.actions = actions
+        self.labels = copy.deepcopy(actions)
+
+        for action_directory in self.actions:
+            action_path = os.path.join(base_address, action_directory)
+            self.action_samples[action_directory] = [
+                os.path.join(action_path, action) for action in os.listdir(action_path)
+            ]
+            # Videos with smaller than 16 frames should not be used.
+            should_be_removed_samples = []
+            for sample in self.action_samples[action_directory]:
+                if len(os.listdir(os.path.join(action_path, sample))) < 16:
+                    print(sample)
+                    should_be_removed_samples.append(sample)
+
+            for sample in should_be_removed_samples:
+                self.action_samples[action_directory].remove(sample)
+
+
 class TraditionalDataset(object):
     def __init__(self, actions, class_sample_size, base_address):
         self.num_actions = len(actions)
@@ -182,17 +203,13 @@ class TraditionalDataset(object):
 
 
 class DataSetUtils(object):
-    def create_tfrecord_dataset(self, base_address):
+    def create_tfrecord_dataset(self, base_address, tf_recoreds_base_address):
         labels = sorted(os.listdir(base_address))
         for label in labels:
             DataSetUtils.check_tf_directory(label)
             label_address = os.path.join(base_address, label)
             samples = sorted(os.listdir(label_address))
             for sample in samples:
-                if sample.startswith('v_PommelHorse_g05'):
-                    print('Ignoring {}'.format(sample))
-                    continue
-
                 sample_address = os.path.join(label_address, sample)
                 frames_list = sorted(os.listdir(sample_address))
                 if len(frames_list) < 16:
@@ -203,7 +220,7 @@ class DataSetUtils(object):
                     np.array(plt.imread(os.path.join(sample_address, frame_name))) for frame_name in frames_list
                 ]
                 video_frames = np.concatenate(video_frames).reshape(-1, 240, 320, 3)
-                DataSetUtils.write_tf_record(video_frames, sample, action=label)
+                DataSetUtils.write_tf_record(tf_recoreds_base_address, video_frames, sample, action=label)
 
     @staticmethod
     def check_tf_directory(action):
@@ -212,9 +229,9 @@ class DataSetUtils(object):
             os.mkdir(directory)
 
     @staticmethod
-    def write_tf_record(video_frames, sample_name, action):
+    def write_tf_record(tf_record_base_address, video_frames, sample_name, action):
         print(sample_name)
-        tf_file_address = os.path.join(UCF101_TFRECORDS, action, sample_name) + '.tfrecord'
+        tf_file_address = os.path.join(tf_record_base_address, action, sample_name) + '.tfrecord'
         if os.path.exists(tf_file_address):
             return
 
@@ -343,7 +360,7 @@ def test_tfercord_dataset():
         tr_task, val_task, tr_vid, va_vid = sess.run(
             [train_example['task'], val_example['task'], train_example['video'], val_example['video']]
         )
-        for i in range(25):
+        for i in range(30):
             print(tr_task[i])
             print(val_task[i])
             plt.subplot(211)
@@ -356,6 +373,9 @@ def test_tfercord_dataset():
 
 
 if __name__ == '__main__':
-    # DataSetUtils().create_tfrecord_dataset()
+    DataSetUtils().create_tfrecord_dataset(
+        base_address='/home/mkhan/kinetics_dataset2/clips/dataset/train/',
+        tf_recoreds_base_address='/home/siavash/kinetics_tfrecords/'
+    )
     # test_traditional_dataset()
-    test_tfercord_dataset()
+    # test_tfercord_dataset()

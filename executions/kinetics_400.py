@@ -14,7 +14,7 @@ LOG_DIR = 'logs/kinetics_400/'
 TRAIN = True
 NUM_CLASSES = 10
 CLASS_SAMPLE_SIZE = 1
-META_BATCH_SIZE = 1
+META_BATCH_SIZE = 5
 NUM_GPUS = 10
 
 
@@ -81,7 +81,7 @@ def train_maml():
         it = 0
         for it in range(10001):
             train_dataset.sample_k_samples()
-            data = train_dataset.next_batch(num_classes=NUM_CLASSES)
+            data = train_dataset.next_batch(meta_batch_size=META_BATCH_SIZE, num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
