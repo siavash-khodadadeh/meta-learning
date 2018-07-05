@@ -30,11 +30,12 @@ def extract_video(parsed_example):
     ), tf.uint8)
 
     clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
+    clip = tf.reshape(clip, (16, 112, 112, 3))
 
     return clip
 
 
-def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, num_examples_per_class, one_hot=True):
+def get_action_tf_dataset(dataset_address, num_classes, num_classes_per_batch, num_examples_per_class, one_hot=True):
     classes_list = sorted(os.listdir(dataset_address))
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
@@ -61,19 +62,19 @@ def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, n
     class_dataset = classes_per_batch_dataset.flat_map(
         lambda classes: tf.data.Dataset.from_tensor_slices(
             tf.one_hot(classes, len(classes_list))
-        ).repeat(num_examples_per_class)
+        ).repeat(2 * num_examples_per_class)
     )
     dataset = tf.contrib.data.sample_from_datasets(per_class_datasets, class_dataset)
     dataset = dataset.map(_parse_example)
 
     meta_batch_size = num_classes_per_batch * num_examples_per_class
-    dataset = dataset.batch(meta_batch_size)
+    dataset = dataset.batch(2 * meta_batch_size)
     return dataset
 
 
 def test_get_ucf101_tf_dataset():
     actions = sorted(os.listdir('/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'))
-    dataset = get_ucf101_tf_dataset(
+    dataset = get_action_tf_dataset(
         '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
         num_classes=20,
         num_classes_per_batch=20,
