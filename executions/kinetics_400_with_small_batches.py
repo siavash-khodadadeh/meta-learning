@@ -85,6 +85,8 @@ def train_maml():
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
+            tr_labels = val_labels = random.sample(range(NUM_CLASSES), META_BATCH_SIZE)
+
             if it % 50 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
                     input_data_ph: tr_data,
