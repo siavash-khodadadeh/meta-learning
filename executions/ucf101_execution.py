@@ -103,6 +103,7 @@ def train_maml():
 
         it = 0
         for it in range(301):
+            train_dataset.sample_k_samples()
             data = train_dataset.next_batch_without_labels_information(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
