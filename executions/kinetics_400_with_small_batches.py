@@ -84,10 +84,10 @@ def train_maml():
             train_dataset.sample_k_samples()
             data = train_dataset.next_batch(num_classes=META_BATCH_SIZE)
             tr_data, tr_labels = data['train']
-            # val_data, val_labels = data['validation']
+            val_data, val_labels = data['validation']
 
             encoder = OneHotEncoder(sparse=False)
-            val_data, val_labels = encoder.fit_transform(
+            tr_labels, val_labels = encoder.fit_transform(
                 np.array(random.sample(range(NUM_CLASSES), META_BATCH_SIZE)).reshape(-1, 1)
             )
 
