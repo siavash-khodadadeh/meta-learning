@@ -3,6 +3,7 @@ import random
 
 import tensorflow as tf
 import numpy as np
+from sklearn.preprocessing.data import OneHotEncoder
 
 from ucf101_data_generator import get_traditional_dataset
 from models import ModelAgnosticMetaLearning, C3DNetwork
@@ -65,7 +66,7 @@ def train_maml():
         learning_rate=0.001,
         train=TRAIN,
         log_device_placement=False,
-        num_classes=101
+        num_classes=NUM_CLASSES
     )
 
     if TRAIN:
@@ -81,11 +82,14 @@ def train_maml():
         it = 0
         for it in range(10001):
             train_dataset.sample_k_samples()
-            data = train_dataset.next_batch(num_classes=NUM_CLASSES)
+            data = train_dataset.next_batch(num_classes=META_BATCH_SIZE)
             tr_data, tr_labels = data['train']
-            val_data, val_labels = data['validation']
+            # val_data, val_labels = data['validation']
 
-            tr_labels = val_labels = random.sample(range(NUM_CLASSES), META_BATCH_SIZE)
+            encoder = OneHotEncoder(sparse=False)
+            val_data, val_labels = encoder.fit_transform(
+                np.array(random.sample(range(NUM_CLASSES), META_BATCH_SIZE)).reshape(-1, 1)
+            )
 
             if it % 50 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={

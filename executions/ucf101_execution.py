@@ -10,7 +10,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 LOG_DIR = 'logs/ucf101/'
-TRAIN = False
+TRAIN = True
 NUM_CLASSES = 5
 CLASS_SAMPLE_SIZE = 1
 META_BATCH_SIZE = 1
@@ -87,7 +87,8 @@ def train_maml():
         meta_learn_rate=0.00001,
         learning_rate=0.001,
         train=TRAIN,
-        log_device_placement=False
+        log_device_placement=False,
+        num_classes=NUM_CLASSES
     )
 
     if TRAIN:

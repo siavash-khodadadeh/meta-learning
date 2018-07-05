@@ -51,16 +51,16 @@ def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, n
             label = tf.one_hot(label, depth=num_classes)
         return feature, label
 
-    classes_list = [dataset_address + class_name + '/*' for class_name in classes_list][:num_classes]
+    classes_list = [dataset_address + class_name + '/*' for class_name in classes_list]
     per_class_datasets = [
         tf.data.TFRecordDataset(tf.data.Dataset.list_files(directory).repeat(-1)) for directory in classes_list
     ]
     classes_per_batch_dataset = tf.contrib.data.Counter().map(
-        lambda _: tf.random_shuffle(tf.range(num_classes))[:num_classes_per_batch]
+        lambda _: tf.random_shuffle(tf.range(len(classes_list)))[:num_classes_per_batch]
     )
     class_dataset = classes_per_batch_dataset.flat_map(
         lambda classes: tf.data.Dataset.from_tensor_slices(
-            tf.one_hot(classes, num_classes)
+            tf.one_hot(classes, len(classes_list))
         ).repeat(num_examples_per_class)
     )
     dataset = tf.contrib.data.sample_from_datasets(per_class_datasets, class_dataset)
@@ -68,19 +68,22 @@ def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, n
 
     meta_batch_size = num_classes_per_batch * num_examples_per_class
     dataset = dataset.batch(meta_batch_size)
-    iterator = dataset.make_initializable_iterator()
-    return iterator.get_next(), iterator
+    return dataset
 
 
 def test_get_ucf101_tf_dataset():
     actions = sorted(os.listdir('/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'))
-    next_example, iterator = get_ucf101_tf_dataset(
+    dataset = get_ucf101_tf_dataset(
         '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-        num_classes=101,
+        num_classes=20,
         num_classes_per_batch=20,
         num_examples_per_class=1,
         one_hot=False
     )
+
+    iterator = dataset.make_initializable_iterator()
+
+    next_example = iterator.get_next()
     input_ph = next_example[0]
     label = next_example[1]
     with tf.Session() as sess:
