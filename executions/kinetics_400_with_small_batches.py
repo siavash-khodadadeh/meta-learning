@@ -14,8 +14,8 @@ LOG_DIR = 'logs/kinetics_400/'
 TRAIN = True
 NUM_CLASSES = 101
 CLASS_SAMPLE_SIZE = 1
-META_BATCH_SIZE = 5
-NUM_GPUS = 10
+META_BATCH_SIZE = 15
+NUM_GPUS = 1
 
 
 random.seed(100)
@@ -84,8 +84,6 @@ def train_maml():
             data = train_dataset.next_batch(num_classes=NUM_CLASSES)
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
-
-            tr_labels = val_labels = random.sample(range(NUM_CLASSES), 20)
 
             if it % 50 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={

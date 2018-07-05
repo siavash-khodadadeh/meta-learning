@@ -134,9 +134,8 @@ class TraditionalDataset(object):
         cur_label = cur_label[cur_label.rindex('/', ) + 1:]
         return self.labels.index(cur_label)
 
-    def next_batch(self, meta_batch_size, num_classes=None, real_labels=False):
-        if num_classes is None:
-            num_classes = meta_batch_size
+    def next_batch(self, num_classes, real_labels=False):
+        meta_batch_size = num_classes
 
         action_begin = self.action_counter
         action_end = self.action_counter + meta_batch_size
