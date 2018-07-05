@@ -206,7 +206,7 @@ class DataSetUtils(object):
     def create_tfrecord_dataset(self, base_address, tf_recoreds_base_address):
         labels = sorted(os.listdir(base_address))
         for label in labels:
-            DataSetUtils.check_tf_directory(label)
+            DataSetUtils.check_tf_directory(tf_recoreds_base_address, label)
             label_address = os.path.join(base_address, label)
             samples = sorted(os.listdir(label_address))
             for sample in samples:
@@ -223,8 +223,8 @@ class DataSetUtils(object):
                 DataSetUtils.write_tf_record(tf_recoreds_base_address, video_frames, sample, action=label)
 
     @staticmethod
-    def check_tf_directory(action):
-        directory = os.path.join(UCF101_TFRECORDS, action)
+    def check_tf_directory(tf_recoreds_base_address, action):
+        directory = os.path.join(tf_recoreds_base_address, action)
         if not os.path.exists(directory):
             os.mkdir(directory)
 
