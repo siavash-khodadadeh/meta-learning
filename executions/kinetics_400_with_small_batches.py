@@ -23,6 +23,12 @@ random.seed(100)
 tf.set_random_seed(100)
 
 
+def indices_to_one_hot(data, nb_classes):
+    """Convert an iterable of indices to one-hot encoded labels."""
+    targets = np.array(data).reshape(-1)
+    return np.eye(nb_classes)[targets]
+
+
 def print_accuracy(outputs, labels):
     # Because we have multiple GPUs, outputs will be of the shape N x 1 x N in numpy
     print('outputs:')
@@ -86,10 +92,8 @@ def train_maml():
             tr_data, tr_labels = data['train']
             val_data, val_labels = data['validation']
 
-            encoder = OneHotEncoder(sparse=False)
-            tr_labels = val_labels = encoder.fit_transform(
-                np.array(random.sample(range(NUM_CLASSES), META_BATCH_SIZE)).reshape(-1, 1)
-            )
+            labels = np.array(random.sample(range(NUM_CLASSES), META_BATCH_SIZE)).reshape(-1, 1)
+            tr_labels = val_labels = indices_to_one_hot(labels, 101)
 
             if it % 50 == 0:
                 merged_summary = maml.sess.run(maml.merged, feed_dict={
