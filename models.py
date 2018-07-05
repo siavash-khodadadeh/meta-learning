@@ -497,7 +497,7 @@ class ModelAgnosticMetaLearning(object):
             experiment_num = str(len(os.listdir(self.log_dir)))
         else:
             experiment_num = '0'
-        self.log_dir = self.log_dir + experiment_num + '/'
+        self.log_dir = os.path.join(self.log_dir, experiment_num) + '/'
         self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
         self.merged = tf.summary.merge_all()
 

@@ -35,7 +35,13 @@ def extract_video(parsed_example):
     return clip
 
 
-def get_action_tf_dataset(dataset_address, num_classes, num_classes_per_batch, num_examples_per_class, one_hot=True):
+def get_action_tf_dataset(
+    dataset_address,
+    num_classes,
+    num_classes_per_batch,
+    num_examples_per_class,
+    one_hot=True,
+):
     classes_list = sorted(os.listdir(dataset_address))
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
@@ -79,7 +85,7 @@ def test_get_ucf101_tf_dataset():
         num_classes=20,
         num_classes_per_batch=20,
         num_examples_per_class=1,
-        one_hot=False
+        one_hot=False,
     )
 
     iterator = dataset.make_initializable_iterator()

@@ -11,10 +11,10 @@ import settings
 
 META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 101  # Train an N-way classifier.
-K = 2  # Train a k-shot learner
+N = 5  # Train an N-way classifier.
+K = 1  # Train a k-shot learner
 
-BATCH_SIZE = 2  # The batch size.
+BATCH_SIZE = 5  # The batch size.
 NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
@@ -24,16 +24,22 @@ REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 
 
-def create_data_feed_for_ucf101():
-    dataset = get_action_tf_dataset(
-        '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-        num_classes=N,
-        num_classes_per_batch=BATCH_SIZE,
-        num_examples_per_class=K,
-        one_hot=True
-    )
-    iterator = dataset.make_initializable_iterator()
-    next_batch = iterator.get_next()
+def convert_to_fake_labels(labels):
+    return tf.one_hot(tf.nn.top_k(labels, k=N).indices, depth=N)
+
+
+def create_data_feed_for_ucf101(real_labels=False):
+    with tf.variable_scope('dataset'):
+        dataset = get_action_tf_dataset(
+            '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+            num_classes=N,
+            num_classes_per_batch=BATCH_SIZE,
+            num_examples_per_class=K,
+            one_hot=real_labels
+        )
+
+        iterator = dataset.make_initializable_iterator()
+        next_batch = iterator.get_next()
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.cast(next_batch[0][:K * BATCH_SIZE], tf.float32)
@@ -44,6 +50,10 @@ def create_data_feed_for_ucf101():
         val_data_ph = tf.cast(next_batch[0][K * BATCH_SIZE:], tf.float32)
         val_labels_ph = next_batch[1][K * BATCH_SIZE:]
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=K * BATCH_SIZE)
+
+    if not real_labels:
+        input_labels_ph = convert_to_fake_labels(input_labels_ph)
+        val_labels_ph = convert_to_fake_labels(val_labels_ph)
 
     return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator
 
