@@ -217,9 +217,13 @@ class DataSetUtils(object):
                     continue
 
                 video_frames = [
-                    np.array(plt.imread(os.path.join(sample_address, frame_name))) for frame_name in frames_list
+                    cv2.resize(
+                        np.array(plt.imread(os.path.join(sample_address, frame_name))), (112, 112)
+                    )
+                    for frame_name in frames_list
                 ]
-                video_frames = np.concatenate(video_frames).reshape(-1, 240, 320, 3)
+
+                video_frames = np.concatenate(video_frames).reshape(-1, 112, 112, 3)
                 DataSetUtils.write_tf_record(tf_recoreds_base_address, video_frames, sample, action=label)
 
     @staticmethod
