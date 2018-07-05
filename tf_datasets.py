@@ -41,8 +41,18 @@ def get_action_tf_dataset(
     num_classes_per_batch,
     num_examples_per_class,
     one_hot=True,
+    actions_exclude=None,
+    actions_include=None
 ):
-    classes_list = sorted(os.listdir(dataset_address))
+    if actions_include is None:
+        classes_list = sorted(os.listdir(dataset_address))
+    else:
+        classes_list = sorted(os.listdir(actions_include))
+
+    if actions_exclude is not None:
+        for action in actions_exclude:
+            classes_list.remove(action)
+
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
 

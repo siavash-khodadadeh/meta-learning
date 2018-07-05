@@ -24,18 +24,48 @@ REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 
 
+test_actions = [
+    'CleanAndJerk',
+    'MoppingFloor',
+    'FrontCrawl',
+    'Surfing',
+    'Bowling',
+    'SoccerPenalty',
+    'SumoWrestling',
+    'Shotput',
+    'PlayingSitar',
+    'FloorGymnastics',
+    'Typing',
+    'JumpingJack',
+    'ShavingBeard',
+    'FrisbeeCatch',
+    'WritingOnBoard',
+    'JavelinThrow',
+    'Fencing',
+    'FieldHockeyPenalty',
+    'BaseballPitch',
+    'CuttingInKitchen',
+    'Kayaking',
+]
+
+
 def convert_to_fake_labels(labels):
     return tf.one_hot(tf.nn.top_k(labels, k=N).indices, depth=N)
 
 
 def create_data_feed_for_ucf101(real_labels=False):
     with tf.variable_scope('dataset'):
+        actions_exclude = test_actions if META_TRAIN else None
+        actions_include = test_actions if not META_TRAIN else None
+
         dataset = get_action_tf_dataset(
             '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
             num_classes=N,
             num_classes_per_batch=BATCH_SIZE,
             num_examples_per_class=K,
-            one_hot=real_labels
+            one_hot=real_labels,
+            actions_exclude=actions_exclude,
+            actions_include=actions_include
         )
 
         iterator = dataset.make_initializable_iterator()
@@ -119,4 +149,6 @@ if __name__ == '__main__':
             save_after_step=SAVE_AFTER_STEP
         )
     else:
-        maml.meta_test()
+        maml.load_model(maml.saving_path + '-1000')
+        data, labels = maml.sess.run((maml.input_data, maml.input_labels))
+        maml.meta_test(data, labels, 5)
