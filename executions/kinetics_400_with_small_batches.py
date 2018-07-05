@@ -87,7 +87,7 @@ def train_maml():
             val_data, val_labels = data['validation']
 
             encoder = OneHotEncoder(sparse=False)
-            tr_labels, val_labels = encoder.fit_transform(
+            tr_labels = val_labels = encoder.fit_transform(
                 np.array(random.sample(range(NUM_CLASSES), META_BATCH_SIZE)).reshape(-1, 1)
             )
 
