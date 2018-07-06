@@ -9,7 +9,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
+META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
 N = 5  # Train an N-way classifier.
 K = 1  # Train a k-shot learner
@@ -22,6 +22,9 @@ STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/spor
 NUM_ITERATIONS = 1000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
+
+META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/' \
+                                                  'num-gpus-1/random-seed-100/num-iterations-1000/-900'
 
 
 test_actions = [
@@ -58,9 +61,8 @@ def create_data_feed_for_ucf101(real_labels=False):
         actions_exclude = test_actions if META_TRAIN else None
         actions_include = test_actions if not META_TRAIN else None
 
-        dataset = get_action_tf_dataset(
+        dataset, classes_list = get_action_tf_dataset(
             '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-            num_classes=N,
             num_classes_per_batch=BATCH_SIZE,
             num_examples_per_class=K,
             one_hot=real_labels,
@@ -81,11 +83,12 @@ def create_data_feed_for_ucf101(real_labels=False):
         val_labels_ph = next_batch[1][K * BATCH_SIZE:]
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=K * BATCH_SIZE)
 
+    real_input_labels = input_labels_ph
     if not real_labels:
         input_labels_ph = convert_to_fake_labels(input_labels_ph)
         val_labels_ph = convert_to_fake_labels(val_labels_ph)
 
-    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator
+    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_input_labels, classes_list
 
 
 def initialize():
@@ -117,7 +120,7 @@ def initialize():
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
     # if DATASET == 'ucf101'
-    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_ucf101()
+    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = create_data_feed_for_ucf101()
 
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,
@@ -128,7 +131,7 @@ def initialize():
         log_dir=log_dir,
         saving_path=saving_path,
         gpu_devices=gpu_devices,
-        meta_learn_rate=0.0001,
+        meta_learn_rate=0.00001,
         learning_rate=0.001,
         log_device_placement=False,
         num_classes=N
@@ -136,19 +139,20 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
-    return maml
+    return maml, real_labels, classes_list
 
 
 if __name__ == '__main__':
-    maml = initialize()
+    maml, real_labels, classes_list = initialize()
     if META_TRAIN:
         maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
-            num_iterations=NUM_ITERATIONS,
+            num_iterations=NUM_ITERATIONS + 1,
             report_after_step=REPORT_AFTER_STEP,
             save_after_step=SAVE_AFTER_STEP
         )
     else:
-        maml.load_model(maml.saving_path + '-1000')
-        data, labels = maml.sess.run((maml.input_data, maml.input_labels))
+        maml.load_model(META_TEST_STARTING_MODEL)
+        data, labels, real_labels_np = maml.sess.run((maml.input_data, maml.input_labels, real_labels))
+        print([classes_list[item][59:] for item in real_labels_np])
         maml.meta_test(data, labels, 5)

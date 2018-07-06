@@ -37,20 +37,26 @@ def extract_video(parsed_example):
 
 def get_action_tf_dataset(
     dataset_address,
-    num_classes,
     num_classes_per_batch,
     num_examples_per_class,
     one_hot=True,
     actions_exclude=None,
     actions_include=None
 ):
-    if actions_include is None:
-        classes_list = sorted(os.listdir(dataset_address))
-    else:
-        classes_list = sorted(os.listdir(actions_include))
+    classes_list = sorted(os.listdir(dataset_address))
+    should_be_removed_actions = []
+
+    if actions_include is not None:
+        for action in classes_list:
+            if action not in actions_include:
+                should_be_removed_actions.append(action)
 
     if actions_exclude is not None:
         for action in actions_exclude:
+            should_be_removed_actions.append(action)
+
+    for action in should_be_removed_actions:
+        if action in classes_list:
             classes_list.remove(action)
 
     mapping_strings = tf.constant(classes_list)
@@ -65,7 +71,7 @@ def get_action_tf_dataset(
         label = label.values[0]
         label = table.lookup(label)
         if one_hot:
-            label = tf.one_hot(label, depth=num_classes)
+            label = tf.one_hot(label, depth=len(classes_list))
         return feature, label
 
     classes_list = [dataset_address + class_name + '/*' for class_name in classes_list]
@@ -85,17 +91,17 @@ def get_action_tf_dataset(
 
     meta_batch_size = num_classes_per_batch * num_examples_per_class
     dataset = dataset.batch(2 * meta_batch_size)
-    return dataset
+    return dataset, classes_list
 
 
 def test_get_ucf101_tf_dataset():
     actions = sorted(os.listdir('/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'))
-    dataset = get_action_tf_dataset(
+    dataset, classes_list = get_action_tf_dataset(
         '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-        num_classes=20,
         num_classes_per_batch=20,
         num_examples_per_class=1,
         one_hot=False,
+        actions_exclude=['ApplyEyeMakeup', 'Bowling']
     )
 
     iterator = dataset.make_initializable_iterator()
