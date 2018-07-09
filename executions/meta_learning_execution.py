@@ -4,7 +4,7 @@ import random
 import tensorflow as tf
 
 
-from tf_datasets import get_action_tf_dataset
+from tf_datasets import create_data_feed_for_ucf101
 from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
@@ -52,45 +52,6 @@ test_actions = [
 ]
 
 
-def convert_to_fake_labels(labels):
-    return tf.one_hot(tf.nn.top_k(labels, k=N).indices, depth=N)
-
-
-def create_data_feed_for_ucf101(real_labels=False):
-    with tf.variable_scope('dataset'):
-        actions_exclude = test_actions if META_TRAIN else None
-        actions_include = test_actions if not META_TRAIN else None
-
-        dataset, classes_list = get_action_tf_dataset(
-            '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-            num_classes_per_batch=BATCH_SIZE,
-            num_examples_per_class=K,
-            one_hot=real_labels,
-            actions_exclude=actions_exclude,
-            actions_include=actions_include
-        )
-
-        iterator = dataset.make_initializable_iterator()
-        next_batch = iterator.get_next()
-
-    with tf.variable_scope('train_data'):
-        input_data_ph = tf.cast(next_batch[0][:K * BATCH_SIZE], tf.float32)
-        input_labels_ph = next_batch[1][:K * BATCH_SIZE]
-        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=K * BATCH_SIZE)
-
-    with tf.variable_scope('validation_data'):
-        val_data_ph = tf.cast(next_batch[0][K * BATCH_SIZE:], tf.float32)
-        val_labels_ph = next_batch[1][K * BATCH_SIZE:]
-        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=K * BATCH_SIZE)
-
-    real_input_labels = input_labels_ph
-    if not real_labels:
-        input_labels_ph = convert_to_fake_labels(input_labels_ph)
-        val_labels_ph = convert_to_fake_labels(val_labels_ph)
-
-    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_input_labels, classes_list
-
-
 def initialize():
     if RANDOM_SEED != -1:
         random.seed(RANDOM_SEED)
@@ -120,7 +81,8 @@ def initialize():
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
     # if DATASET == 'ucf101'
-    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = create_data_feed_for_ucf101()
+    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = \
+        create_data_feed_for_ucf101(test_actions, META_TRAIN, BATCH_SIZE, K, N)
 
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,

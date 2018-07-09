@@ -1,7 +1,6 @@
 import os
 
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 
 def parse_example(example_proto):
@@ -12,6 +11,10 @@ def parse_example(example_proto):
     }
     parsed_example = tf.parse_single_example(example_proto, features)
     return parsed_example
+
+
+def convert_to_fake_labels(labels, num_classes):
+    return tf.one_hot(tf.nn.top_k(labels, k=num_classes).indices, depth=num_classes)
 
 
 def extract_video(parsed_example):
@@ -94,33 +97,39 @@ def get_action_tf_dataset(
     return dataset, classes_list
 
 
-def test_get_ucf101_tf_dataset():
-    actions = sorted(os.listdir('/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'))
-    dataset, classes_list = get_action_tf_dataset(
-        '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-        num_classes_per_batch=20,
-        num_examples_per_class=1,
-        one_hot=False,
-        actions_exclude=['ApplyEyeMakeup', 'Bowling']
-    )
+def create_data_feed_for_ucf101(test_actions, train, batch_size, k, n, real_labels=False):
+    """Meta learning dataset for ucf101."""
+    with tf.variable_scope('dataset'):
+        actions_exclude = test_actions if train else None
+        actions_include = test_actions if not train else None
 
-    iterator = dataset.make_initializable_iterator()
+        dataset, classes_list = get_action_tf_dataset(
+            '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+            num_classes_per_batch=batch_size,
+            num_examples_per_class=k,
+            one_hot=real_labels,
+            actions_exclude=actions_exclude,
+            actions_include=actions_include
+        )
 
-    next_example = iterator.get_next()
-    input_ph = next_example[0]
-    label = next_example[1]
-    with tf.Session() as sess:
-        sess.run(iterator.initializer)
-        tf.tables_initializer().run()
-        for _ in range(150):
-            data_np, label_np = sess.run((input_ph, label))
-            print(label_np)
-            print([actions[label] for label in label_np])
-            for subplot_index in range(1, 21):
-                plt.subplot(4, 5, subplot_index)
-                plt.imshow(data_np[subplot_index - 1, 0, :, :, :])
-            plt.show()
+        iterator = dataset.make_initializable_iterator()
+        next_batch = iterator.get_next()
+
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0][:k * batch_size], tf.float32)
+        input_labels_ph = next_batch[1][:k * batch_size]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+
+    with tf.variable_scope('validation_data'):
+        val_data_ph = tf.cast(next_batch[0][k * batch_size:], tf.float32)
+        val_labels_ph = next_batch[1][k * batch_size:]
+        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+
+    real_input_labels = input_labels_ph
+    if not real_labels:
+        input_labels_ph = convert_to_fake_labels(input_labels_ph, n)
+        val_labels_ph = convert_to_fake_labels(val_labels_ph, n)
+
+    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_input_labels, classes_list
 
 
-if __name__ == '__main__':
-    test_get_ucf101_tf_dataset()
