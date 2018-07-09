@@ -11,20 +11,22 @@ import settings
 
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 5  # Train an N-way classifier.
-K = 1  # Train a k-shot learner
+N = 101  # Train an N-way classifier.
+K = 1  # Train a K-shot learner
 
 BATCH_SIZE = 5  # The batch size.
 NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
-NUM_ITERATIONS = 1000
+NUM_ITERATIONS = 100
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 
-META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/' \
-                                                  'num-gpus-1/random-seed-100/num-iterations-1000/-900'
+# META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/' \
+#                                                   'num-gpus-1/random-seed-100/num-iterations-1000/-900'
+
+META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/kinetics400/model-9800'
 
 
 test_actions = [
@@ -126,4 +128,4 @@ if __name__ == '__main__':
         )
     else:
         maml.load_model(META_TEST_STARTING_MODEL)
-        maml.meta_test(100)
+        maml.meta_test(NUM_ITERATIONS)
