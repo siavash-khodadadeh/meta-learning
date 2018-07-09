@@ -171,3 +171,29 @@ def create_k_sample_per_action_iterative_dataset(
     dataset = dataset.map(_parse_example)
     dataset = dataset.batch(batch_size)
     return dataset
+
+
+def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+        k,
+        batch_size,
+        one_hot=True,
+        actions_include=None,
+        actions_exclude=None
+):
+    dataset = create_k_sample_per_action_iterative_dataset(
+        '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+        k=k,
+        batch_size=batch_size,
+        one_hot=one_hot,
+        actions_include=actions_include,
+        actions_exclude=actions_exclude
+    )
+    iterator = dataset.make_initializable_iterator()
+    next_batch = iterator.get_next()
+
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0], tf.float32)
+        input_labels_ph = next_batch[1]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
+
+    return input_data_ph, input_labels_ph, iterator

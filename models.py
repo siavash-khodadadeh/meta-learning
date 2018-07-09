@@ -557,14 +557,11 @@ class ModelAgnosticMetaLearning(object):
             if it % save_after_step == 0:
                 self.save_model(path=self.saving_path, step=it)
 
-    def meta_test(self, data, labels, num_iterations):
+    def meta_test(self, num_iterations, save_model_per_x_iterations=20):
         for it in range(num_iterations):
-            _, merged_summary = self.sess.run((self.inner_train_ops, self.merged), feed_dict={
-                self.input_data: data,
-                self.input_labels: labels,
-                self.input_validation: data,
-                self.input_validation_labels: labels,
-            })
+            _, merged_summary = self.sess.run((self.inner_train_ops, self.merged))
 
             self.file_writer.add_summary(merged_summary, global_step=it)
-            self.save_model(path=self.saving_path, step=it)
+            if it % save_model_per_x_iterations == 0:
+                self.save_model(path=self.saving_path, step=it)
+0

@@ -4,7 +4,7 @@ import random
 import tensorflow as tf
 
 
-from tf_datasets import create_data_feed_for_ucf101
+from tf_datasets import create_data_feed_for_ucf101, create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset
 from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
@@ -80,9 +80,20 @@ def initialize():
     )
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
-    # if DATASET == 'ucf101'
-    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = \
-        create_data_feed_for_ucf101(test_actions, META_TRAIN, BATCH_SIZE, K, N)
+    if DATASET == 'ucf101' and META_TRAIN:
+        input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = \
+            create_data_feed_for_ucf101(test_actions, META_TRAIN, BATCH_SIZE, K, N)
+    else:
+        input_data_ph, input_labels_ph, iterator = \
+            create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+                k=K,
+                batch_size=BATCH_SIZE,
+            )
+
+        # val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
+        # val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, N])
+        val_data_ph = input_data_ph
+        val_labels_ph = input_labels_ph
 
     maml = ModelAgnosticMetaLearning(
         C3DNetwork,
@@ -101,11 +112,11 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
-    return maml, real_labels, classes_list
+    return maml
 
 
 if __name__ == '__main__':
-    maml, real_labels, classes_list = initialize()
+    maml = initialize()
     if META_TRAIN:
         maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
@@ -115,6 +126,4 @@ if __name__ == '__main__':
         )
     else:
         maml.load_model(META_TEST_STARTING_MODEL)
-        data, labels, real_labels_np = maml.sess.run((maml.input_data, maml.input_labels, real_labels))
-        print([classes_list[item][59:] for item in real_labels_np])
-        maml.meta_test(data, labels, 5)
+        maml.meta_test(100)
