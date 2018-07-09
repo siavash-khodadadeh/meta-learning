@@ -38,14 +38,7 @@ def extract_video(parsed_example):
     return clip
 
 
-def get_action_tf_dataset(
-    dataset_address,
-    num_classes_per_batch,
-    num_examples_per_class,
-    one_hot=True,
-    actions_exclude=None,
-    actions_include=None
-):
+def prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude):
     classes_list = sorted(os.listdir(dataset_address))
     should_be_removed_actions = []
 
@@ -64,6 +57,18 @@ def get_action_tf_dataset(
 
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
+    return classes_list, table
+
+
+def get_action_tf_dataset(
+    dataset_address,
+    num_classes_per_batch,
+    num_examples_per_class,
+    one_hot=True,
+    actions_exclude=None,
+    actions_include=None
+):
+    classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
 
     def _parse_example(example):
         parsed_example = parse_example(example)
@@ -133,3 +138,36 @@ def create_data_feed_for_ucf101(test_actions, train, batch_size, k, n, real_labe
     return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_input_labels, classes_list
 
 
+def create_k_sample_per_action_iterative_dataset(
+        dataset_address,
+        k,
+        batch_size,
+        one_hot=True,
+        actions_include=None,
+        actions_exclude=None,
+):
+    classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
+
+    def _parse_example(example):
+        parsed_example = parse_example(example)
+        feature = extract_video(parsed_example)
+
+        example_address = parsed_example['task']
+        label = tf.string_split([example_address], '/')
+        label = label.values[0]
+        label = table.lookup(label)
+        if one_hot:
+            label = tf.one_hot(label, depth=len(classes_list))
+
+        return feature, label
+
+    examples = list()
+    for class_directory in classes_list:
+        video_addresses = os.listdir(os.path.join(dataset_address, class_directory))[:k]
+        for video_address in video_addresses:
+            examples.append(os.path.join(dataset_address, class_directory, video_address))
+
+    dataset = tf.data.TFRecordDataset(examples).shuffle(100).repeat(-1)
+    dataset = dataset.map(_parse_example)
+    dataset = dataset.batch(batch_size)
+    return dataset
