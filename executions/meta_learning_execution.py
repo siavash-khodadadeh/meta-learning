@@ -56,44 +56,37 @@ def initialize():
         random.seed(RANDOM_SEED)
         tf.set_random_seed(RANDOM_SEED)
 
+    model_dir = os.path.join(
+        DATASET,
+        'meta-train'
+        '{}-way-classifier'.format(N),
+        '{}-shot'.format(K),
+        'batch-size-{}'.format(BATCH_SIZE),
+        'num-gpus-{}'.format(NUM_GPUS),
+        'random-seed-{}'.format(RANDOM_SEED),
+        'num-iterations-{}'.format(NUM_ITERATIONS),
+    )
+
     if META_TRAIN:
-        log_dir = os.path.join(
-            settings.BASE_LOG_ADDRESS,
-            DATASET,
-            'meta-train' if META_TRAIN else 'meta-test',
-            '{}-way-classifier'.format(N),
-            '{}-shot'.format(K),
-            'batch-size-{}'.format(BATCH_SIZE),
-            'num-gpus-{}'.format(NUM_GPUS),
-            'random-seed-{}'.format(RANDOM_SEED),
-            'num-iterations-{}'.format(NUM_ITERATIONS),
-        )
-
-        saving_path = os.path.join(
-            settings.SAVED_MODELS_ADDRESS,
-            DATASET, 'meta-train' if META_TRAIN else 'meta-test',
-            '{}-way-classifier'.format(N),
-            '{}-shot'.format(K),
-            'batch-size-{}'.format(BATCH_SIZE),
-            'num-gpus-{}'.format(NUM_GPUS),
-            'random-seed-{}'.format(RANDOM_SEED),
-            'num-iterations-{}'.format(NUM_ITERATIONS),
-        )
+        log_dir = os.path.join(settings.BASE_LOG_ADDRESS, model_dir)
+        saving_path = os.path.join(settings.SAVED_MODELS_ADDRESS, model_dir)
     else:
-        log_dir = META_TEST_STARTING_MODEL.replace(
-            settings.SAVED_MODELS_ADDRESS, settings.BASE_LOG_ADDRESS
-        ).replace('meta-train', 'meta-test')
-
-        saving_path = META_TEST_STARTING_MODEL
-
+        log_dir = os.path.join(settings.BASE_LOG_ADDRESS, 'meta-test')
+        saving_path = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test', 'model')
 
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
+    if DATASET == 'ucf-101':
+        base_address = '/home/siavash/ucf101_tfrecords'
+        # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
+    else:
+        base_address = '/home/siavash/kinetics_tfrecords'
+
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
-            base_address='/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+            base_address=base_address,
             test_actions=None,
-            batch_size=15,
+            batch_size=BATCH_SIZE,
             k=1,
             n=101,
             random_labels=True
