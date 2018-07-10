@@ -14,7 +14,7 @@ DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
 N = 101  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
-NUM_ITERATIONS = 100
+NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 BATCH_SIZE = 5  # The batch size.
