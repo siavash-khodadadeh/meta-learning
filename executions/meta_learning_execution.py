@@ -9,7 +9,7 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
+META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
 N = 101  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
