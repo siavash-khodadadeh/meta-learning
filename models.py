@@ -545,16 +545,16 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver.restore(self.sess, path)
 
-    def meta_train(self, num_iterations, report_after_step, save_after_step):
+    def meta_train(self, num_iterations, report_after_x_step, save_after_x_step):
         for it in range(num_iterations):
-            if it % report_after_step == 0:
+            if it % report_after_x_step == 0:
                 merged_summary, _ = self.sess.run((self.merged, self.train_op))
                 self.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
             else:
                 self.sess.run(self.train_op)
 
-            if it % save_after_step == 0:
+            if it % save_after_x_step == 0:
                 self.save_model(path=self.saving_path, step=it)
 
     def meta_test(self, num_iterations, save_model_per_x_iterations=20):

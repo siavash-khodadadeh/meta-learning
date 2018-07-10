@@ -17,6 +17,10 @@ def convert_to_fake_labels(labels, num_classes):
     return tf.one_hot(tf.nn.top_k(labels, k=num_classes).indices, depth=num_classes)
 
 
+def get_random_labels(batch_size, num_classes):
+    return tf.random_shuffle(tf.range(num_classes))[:batch_size]
+
+
 def extract_video(parsed_example):
     start_frame_number = tf.cond(
         tf.equal(parsed_example['len'], 16),
@@ -102,19 +106,17 @@ def get_action_tf_dataset(
     return dataset, classes_list
 
 
-def create_data_feed_for_ucf101(test_actions, train, batch_size, k, n, real_labels=False):
+def create_data_feed_for_train(base_address, test_actions, batch_size, k, n, random_labels=False):
     """Meta learning dataset for ucf101."""
     with tf.variable_scope('dataset'):
-        actions_exclude = test_actions if train else None
-        actions_include = test_actions if not train else None
+        actions_exclude = test_actions
 
         dataset, classes_list = get_action_tf_dataset(
-            '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+            dataset_address=base_address,
             num_classes_per_batch=batch_size,
             num_examples_per_class=k,
-            one_hot=real_labels,
+            one_hot=False,
             actions_exclude=actions_exclude,
-            actions_include=actions_include
         )
 
         iterator = dataset.make_initializable_iterator()
@@ -130,12 +132,14 @@ def create_data_feed_for_ucf101(test_actions, train, batch_size, k, n, real_labe
         val_labels_ph = next_batch[1][k * batch_size:]
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
 
-    real_input_labels = input_labels_ph
-    if not real_labels:
+    if random_labels:
+        input_labels_ph = get_random_labels(batch_size, n)
+        val_labels_ph = input_labels_ph
+    else:
         input_labels_ph = convert_to_fake_labels(input_labels_ph, n)
         val_labels_ph = convert_to_fake_labels(val_labels_ph, n)
 
-    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_input_labels, classes_list
+    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator
 
 
 def create_k_sample_per_action_iterative_dataset(

@@ -4,7 +4,7 @@ import random
 import tensorflow as tf
 
 
-from tf_datasets import create_data_feed_for_ucf101, create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset
+from tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, create_data_feed_for_train
 from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
@@ -14,17 +14,14 @@ DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
 N = 101  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
-BATCH_SIZE = 5  # The batch size.
-NUM_GPUS = 1  # Number of GPUs to use for training.
-RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
-STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
-
 NUM_ITERATIONS = 100
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
+BATCH_SIZE = 5  # The batch size.
 
-# META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/' \
-#                                                   'num-gpus-1/random-seed-100/num-iterations-1000/-900'
+NUM_GPUS = 1  # Number of GPUs to use for training.
+RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
+STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
 META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/kinetics400/model-9800'
 
@@ -59,41 +56,54 @@ def initialize():
         random.seed(RANDOM_SEED)
         tf.set_random_seed(RANDOM_SEED)
 
-    log_dir = os.path.join(
-        settings.BASE_LOG_ADDRESS,
-        DATASET, 'meta-train' if META_TRAIN else 'meta-test',
-        '{}-way-classifier'.format(N),
-        '{}-shot'.format(K),
-        'batch-size-{}'.format(BATCH_SIZE),
-        'num-gpus-{}'.format(NUM_GPUS),
-        'random-seed-{}'.format(RANDOM_SEED),
-        'num-iterations-{}'.format(NUM_ITERATIONS),
-    )
+    if META_TRAIN:
+        log_dir = os.path.join(
+            settings.BASE_LOG_ADDRESS,
+            DATASET,
+            'meta-train' if META_TRAIN else 'meta-test',
+            '{}-way-classifier'.format(N),
+            '{}-shot'.format(K),
+            'batch-size-{}'.format(BATCH_SIZE),
+            'num-gpus-{}'.format(NUM_GPUS),
+            'random-seed-{}'.format(RANDOM_SEED),
+            'num-iterations-{}'.format(NUM_ITERATIONS),
+        )
 
-    saving_path = os.path.join(
-        settings.SAVED_MODELS_ADDRESS,
-        DATASET, 'meta-train' if META_TRAIN else 'meta-test',
-        '{}-way-classifier'.format(N),
-        '{}-shot'.format(K),
-        'batch-size-{}'.format(BATCH_SIZE),
-        'num-gpus-{}'.format(NUM_GPUS),
-        'random-seed-{}'.format(RANDOM_SEED),
-        'num-iterations-{}'.format(NUM_ITERATIONS),
-    )
+        saving_path = os.path.join(
+            settings.SAVED_MODELS_ADDRESS,
+            DATASET, 'meta-train' if META_TRAIN else 'meta-test',
+            '{}-way-classifier'.format(N),
+            '{}-shot'.format(K),
+            'batch-size-{}'.format(BATCH_SIZE),
+            'num-gpus-{}'.format(NUM_GPUS),
+            'random-seed-{}'.format(RANDOM_SEED),
+            'num-iterations-{}'.format(NUM_ITERATIONS),
+        )
+    else:
+        log_dir = META_TEST_STARTING_MODEL.replace(
+            settings.SAVED_MODELS_ADDRESS, settings.BASE_LOG_ADDRESS
+        ).replace('meta-train', 'meta-test')
+
+        saving_path = META_TEST_STARTING_MODEL
+
+
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
-    if DATASET == 'ucf101' and META_TRAIN:
-        input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, real_labels, classes_list = \
-            create_data_feed_for_ucf101(test_actions, META_TRAIN, BATCH_SIZE, K, N)
+    if META_TRAIN:
+        input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
+            base_address='/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+            test_actions=None,
+            batch_size=15,
+            k=1,
+            n=101,
+            random_labels=True
+        )
     else:
         input_data_ph, input_labels_ph, iterator = \
             create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
                 k=K,
                 batch_size=BATCH_SIZE,
             )
-
-        # val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        # val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, N])
         val_data_ph = input_data_ph
         val_labels_ph = input_labels_ph
 
@@ -123,9 +133,9 @@ if __name__ == '__main__':
         maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
             num_iterations=NUM_ITERATIONS + 1,
-            report_after_step=REPORT_AFTER_STEP,
-            save_after_step=SAVE_AFTER_STEP
+            report_after_x_step=REPORT_AFTER_STEP,
+            save_after_x_step=SAVE_AFTER_STEP
         )
     else:
         maml.load_model(META_TEST_STARTING_MODEL)
-        maml.meta_test(NUM_ITERATIONS)
+        maml.meta_test(NUM_ITERATIONS + 1, save_model_per_x_iterations=SAVE_AFTER_STEP)
