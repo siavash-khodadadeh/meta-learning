@@ -18,7 +18,7 @@ def convert_to_fake_labels(labels, num_classes):
 
 
 def get_random_labels(batch_size, num_classes):
-    return tf.random_shuffle(tf.range(num_classes))[:batch_size]
+    return tf.one_hot(tf.random_shuffle(tf.range(num_classes))[:batch_size], depth=num_classes)
 
 
 def extract_video(parsed_example):
