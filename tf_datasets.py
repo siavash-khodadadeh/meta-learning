@@ -1,7 +1,6 @@
 import os
 
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 
 def parse_example(example_proto):
@@ -12,6 +11,14 @@ def parse_example(example_proto):
     }
     parsed_example = tf.parse_single_example(example_proto, features)
     return parsed_example
+
+
+def convert_to_fake_labels(labels, num_classes):
+    return tf.one_hot(tf.nn.top_k(labels, k=num_classes).indices, depth=num_classes)
+
+
+def get_random_labels(batch_size, num_classes):
+    return tf.random_shuffle(tf.range(num_classes))[:batch_size]
 
 
 def extract_video(parsed_example):
@@ -30,14 +37,42 @@ def extract_video(parsed_example):
     ), tf.uint8)
 
     clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
+    clip = tf.reshape(clip, (16, 112, 112, 3))
 
     return clip
 
 
-def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, num_examples_per_class, one_hot=True):
+def prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude):
     classes_list = sorted(os.listdir(dataset_address))
+    should_be_removed_actions = []
+
+    if actions_include is not None:
+        for action in classes_list:
+            if action not in actions_include:
+                should_be_removed_actions.append(action)
+
+    if actions_exclude is not None:
+        for action in actions_exclude:
+            should_be_removed_actions.append(action)
+
+    for action in should_be_removed_actions:
+        if action in classes_list:
+            classes_list.remove(action)
+
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
+    return classes_list, table
+
+
+def get_action_tf_dataset(
+    dataset_address,
+    num_classes_per_batch,
+    num_examples_per_class,
+    one_hot=True,
+    actions_exclude=None,
+    actions_include=None
+):
+    classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
 
     def _parse_example(example):
         parsed_example = parse_example(example)
@@ -48,7 +83,7 @@ def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, n
         label = label.values[0]
         label = table.lookup(label)
         if one_hot:
-            label = tf.one_hot(label, depth=num_classes)
+            label = tf.one_hot(label, depth=len(classes_list))
         return feature, label
 
     classes_list = [dataset_address + class_name + '/*' for class_name in classes_list]
@@ -61,43 +96,108 @@ def get_ucf101_tf_dataset(dataset_address, num_classes, num_classes_per_batch, n
     class_dataset = classes_per_batch_dataset.flat_map(
         lambda classes: tf.data.Dataset.from_tensor_slices(
             tf.one_hot(classes, len(classes_list))
-        ).repeat(num_examples_per_class)
+        ).repeat(2 * num_examples_per_class)
     )
     dataset = tf.contrib.data.sample_from_datasets(per_class_datasets, class_dataset)
     dataset = dataset.map(_parse_example)
 
     meta_batch_size = num_classes_per_batch * num_examples_per_class
-    dataset = dataset.batch(meta_batch_size)
+    dataset = dataset.batch(2 * meta_batch_size)
+    return dataset, classes_list
+
+
+def create_data_feed_for_train(base_address, test_actions, batch_size, k, n, random_labels=False):
+    """Meta learning dataset for ucf101."""
+    with tf.variable_scope('dataset'):
+        actions_exclude = test_actions
+
+        dataset, classes_list = get_action_tf_dataset(
+            dataset_address=base_address,
+            num_classes_per_batch=batch_size,
+            num_examples_per_class=k,
+            one_hot=False,
+            actions_exclude=actions_exclude,
+        )
+
+        iterator = dataset.make_initializable_iterator()
+        next_batch = iterator.get_next()
+
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0][:k * batch_size], tf.float32)
+        input_labels_ph = next_batch[1][:k * batch_size]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+
+    with tf.variable_scope('validation_data'):
+        val_data_ph = tf.cast(next_batch[0][k * batch_size:], tf.float32)
+        val_labels_ph = next_batch[1][k * batch_size:]
+        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+
+    if random_labels:
+        input_labels_ph = get_random_labels(batch_size, n)
+        val_labels_ph = input_labels_ph
+    else:
+        input_labels_ph = convert_to_fake_labels(input_labels_ph, n)
+        val_labels_ph = convert_to_fake_labels(val_labels_ph, n)
+
+    return input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator
+
+
+def create_k_sample_per_action_iterative_dataset(
+        dataset_address,
+        k,
+        batch_size,
+        one_hot=True,
+        actions_include=None,
+        actions_exclude=None,
+):
+    classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
+
+    def _parse_example(example):
+        parsed_example = parse_example(example)
+        feature = extract_video(parsed_example)
+
+        example_address = parsed_example['task']
+        label = tf.string_split([example_address], '/')
+        label = label.values[0]
+        label = table.lookup(label)
+        if one_hot:
+            label = tf.one_hot(label, depth=len(classes_list))
+
+        return feature, label
+
+    examples = list()
+    for class_directory in classes_list:
+        video_addresses = os.listdir(os.path.join(dataset_address, class_directory))[:k]
+        for video_address in video_addresses:
+            examples.append(os.path.join(dataset_address, class_directory, video_address))
+
+    dataset = tf.data.TFRecordDataset(examples).shuffle(100).repeat(-1)
+    dataset = dataset.map(_parse_example)
+    dataset = dataset.batch(batch_size)
     return dataset
 
 
-def test_get_ucf101_tf_dataset():
-    actions = sorted(os.listdir('/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'))
-    dataset = get_ucf101_tf_dataset(
+def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+        k,
+        batch_size,
+        one_hot=True,
+        actions_include=None,
+        actions_exclude=None
+):
+    dataset = create_k_sample_per_action_iterative_dataset(
         '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
-        num_classes=20,
-        num_classes_per_batch=20,
-        num_examples_per_class=1,
-        one_hot=False
+        k=k,
+        batch_size=batch_size,
+        one_hot=one_hot,
+        actions_include=actions_include,
+        actions_exclude=actions_exclude
     )
-
     iterator = dataset.make_initializable_iterator()
+    next_batch = iterator.get_next()
 
-    next_example = iterator.get_next()
-    input_ph = next_example[0]
-    label = next_example[1]
-    with tf.Session() as sess:
-        sess.run(iterator.initializer)
-        tf.tables_initializer().run()
-        for _ in range(150):
-            data_np, label_np = sess.run((input_ph, label))
-            print(label_np)
-            print([actions[label] for label in label_np])
-            for subplot_index in range(1, 21):
-                plt.subplot(4, 5, subplot_index)
-                plt.imshow(data_np[subplot_index - 1, 0, :, :, :])
-            plt.show()
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0], tf.float32)
+        input_labels_ph = next_batch[1]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
 
-
-if __name__ == '__main__':
-    test_get_ucf101_tf_dataset()
+    return input_data_ph, input_labels_ph, iterator

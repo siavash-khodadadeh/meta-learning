@@ -9,11 +9,12 @@ from ucf101_data_generator import TraditionalDataset
 LOG_DIR = 'logs/ucf101_transfer_learning/'
 BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
-SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_to_20_classes/model-400'
+# SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_to_20_classes/model-400'
 # SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
+SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/ucf-101/meta-test/101-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/num-iterations-100/-40'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -31,28 +32,28 @@ SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_to_20_classes/model-400'
 #     'BaseballPitch': 4,
 # }
 
-TEST_ACTIONS = {
-    'SoccerPenalty': 0,
-    'Kayaking': 1,
-    'Shotput': 2,
-    'Typing': 3,
-    'Bowling': 4,
-    'WritingOnBoard': 5,
-    'FrontCrawl': 6,
-    'JavelinThrow': 7,
-    'Surfing': 8,
-    'ShavingBeard': 9,
-    'CleanAndJerk': 10,
-    'BaseballPitch': 11,
-    'FrisbeeCatch': 12,
-    'SumoWrestling': 13,
-    'CuttingInKitchen': 14,
-    'PlayingSitar': 15,
-    'FloorGymnastics': 16,
-    'Fencing': 17,
-    'FieldHockeyPenalty': 18,
-    'MoppingFloor': 19,
-}
+# TEST_ACTIONS = {
+#     'SoccerPenalty': 0,
+#     'Kayaking': 1,
+#     'Shotput': 2,
+#     'Typing': 3,
+#     'Bowling': 4,
+#     'WritingOnBoard': 5,
+#     'FrontCrawl': 6,
+#     'JavelinThrow': 7,
+#     'Surfing': 8,
+#     'ShavingBeard': 9,
+#     'CleanAndJerk': 10,
+#     'BaseballPitch': 11,
+#     'FrisbeeCatch': 12,
+#     'SumoWrestling': 13,
+#     'CuttingInKitchen': 14,
+#     'PlayingSitar': 15,
+#     'FloorGymnastics': 16,
+#     'Fencing': 17,
+#     'FieldHockeyPenalty': 18,
+#     'MoppingFloor': 19,
+# }
 
 # TEST_ACTIONS = {
 #     'PlayingSitar': 0,
@@ -102,15 +103,24 @@ TEST_ACTIONS = {
 # }
 
 
+TEST_ACTIONS_LIST = sorted(os.listdir(BASE_ADDRESS))
+TEST_ACTIONS = {}
+
+counter = 0
+for action in TEST_ACTIONS_LIST:
+    TEST_ACTIONS[action] = counter
+    counter += 1
+
+
 def evaluate():
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 101])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 101])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
@@ -121,8 +131,9 @@ def evaluate():
         val_labels_ph,
         log_dir=LOG_DIR,
         learning_rate=0.001,
-        train=False,
-        log_device_placement=False
+        log_device_placement=False,
+        saving_path=None,
+        num_classes=101,
     )
 
     maml.load_model(path=SAVED_MODEL_ADDRESS)
@@ -132,7 +143,7 @@ def evaluate():
     for action in TEST_ACTIONS.keys():
         class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
-        for file_address in os.listdir(BASE_ADDRESS + action):
+        for file_address in os.listdir(BASE_ADDRESS + action)[:10]:
             video_address = BASE_ADDRESS + action + '/' + file_address
             if len(os.listdir(video_address)) < 16:
                 continue

@@ -316,15 +316,15 @@ class ModelAgnosticMetaLearning(object):
             input_validation_ph,
             input_validation_labels_ph,
             log_dir,
+            saving_path,
             neural_loss_learning_rate=0.001,
             meta_learn_rate=0.00001,
             learning_rate=0.0001,
             gpu_devices=None,
             learn_the_loss_function=False,
-            train=True,
             debug=False,
             log_device_placement=True,
-            num_classes=None
+            num_classes=None,
     ):
         if gpu_devices is None:
             self.devices = '/gpu:0',
@@ -492,15 +492,16 @@ class ModelAgnosticMetaLearning(object):
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
 
-        self.log_dir = log_dir + ('train/' if train else 'test/')
+        self.log_dir = log_dir
         if os.path.exists(self.log_dir):
             experiment_num = str(len(os.listdir(self.log_dir)))
         else:
             experiment_num = '0'
-        self.log_dir = self.log_dir + experiment_num + '/'
+        self.log_dir = os.path.join(self.log_dir, experiment_num) + '/'
         self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
         self.merged = tf.summary.merge_all()
 
+        self.saving_path = saving_path
         self.saver = tf.train.Saver()
 
         config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device_placement)
@@ -526,6 +527,14 @@ class ModelAgnosticMetaLearning(object):
             return tf.norm(loss)
 
     def save_model(self, path, step):
+        if path[len(path) - 1] != '/':
+            path += '/'
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path)
+            except OSError as exc:  # Guard against race condition
+                raise exc
+
         self.saver = tf.train.Saver()
         self.saver.save(self.sess, path, global_step=step)
 
@@ -536,6 +545,24 @@ class ModelAgnosticMetaLearning(object):
 
         self.saver.restore(self.sess, path)
 
-    def meta_train(self, num_iterations):
+    def meta_train(self, num_iterations, report_after_x_step, save_after_x_step):
         for it in range(num_iterations):
-            self.sess.run(self.train_op)
+            if it % report_after_x_step == 0:
+                merged_summary, _ = self.sess.run((self.merged, self.train_op))
+                self.file_writer.add_summary(merged_summary, global_step=it)
+                print(it)
+            else:
+                self.sess.run(self.train_op)
+
+            if it % save_after_x_step == 0:
+                self.save_model(path=self.saving_path, step=it)
+
+    def meta_test(self, num_iterations, save_model_per_x_iterations=20):
+        for it in range(num_iterations):
+            print(it)
+            _, merged_summary = self.sess.run((self.inner_train_ops, self.merged))
+
+            self.file_writer.add_summary(merged_summary, global_step=it)
+            if it % save_model_per_x_iterations == 0:
+                self.save_model(path=self.saving_path, step=it)
+0
