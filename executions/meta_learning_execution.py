@@ -10,7 +10,7 @@ import settings
 
 
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
+DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
 N = 101  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
@@ -77,10 +77,10 @@ def initialize():
     gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
 
     if DATASET == 'ucf-101':
-        base_address = '/home/siavash/ucf101_tfrecords'
+        base_address = '/home/siavash/ucf101_tfrecords/'
         # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
     else:
-        base_address = '/home/siavash/kinetics_tfrecords'
+        base_address = '/home/siavash/kinetics_tfrecords/'
 
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
