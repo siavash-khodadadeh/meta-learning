@@ -21,7 +21,7 @@ def get_random_labels(batch_size, num_classes):
     return tf.one_hot(tf.random_shuffle(tf.range(num_classes))[:batch_size], depth=num_classes)
 
 
-def extract_video(parsed_example):
+def extract_video(parsed_example, dataset_name='ucf-101'):
     start_frame_number = tf.cond(
         tf.equal(parsed_example['len'], 16),
         lambda: tf.cast(0, tf.int64),
@@ -29,12 +29,15 @@ def extract_video(parsed_example):
     )
 
     decoded_video = tf.decode_raw(parsed_example['video'], tf.uint8)
-    reshaped_video = tf.reshape(decoded_video, shape=(-1, 240, 320, 3))
-    resized_video = tf.cast(tf.image.resize_images(
-        reshaped_video,
-        size=(112, 112),
-        method=tf.image.ResizeMethod.BILINEAR
-    ), tf.uint8)
+    if dataset_name == 'ucf-101':
+        reshaped_video = tf.reshape(decoded_video, shape=(-1, 240, 320, 3))
+        resized_video = tf.cast(tf.image.resize_images(
+            reshaped_video,
+            size=(112, 112),
+            method=tf.image.ResizeMethod.BILINEAR
+        ), tf.uint8)
+    else:
+        resized_video = tf.reshape(decoded_video, shape=(-1, 112, 112, 3))
 
     clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
     clip = tf.reshape(clip, (16, 112, 112, 3))
@@ -73,10 +76,11 @@ def get_action_tf_dataset(
     actions_include=None
 ):
     classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
+    dataset_name = 'kinetics' if 'kinetics' in dataset_address else 'ucf-101'
 
     def _parse_example(example):
         parsed_example = parse_example(example)
-        feature = extract_video(parsed_example)
+        feature = extract_video(parsed_example, dataset_name)
 
         example_address = parsed_example['task']
         label = tf.string_split([example_address], '/')
@@ -151,10 +155,11 @@ def create_k_sample_per_action_iterative_dataset(
         actions_exclude=None,
 ):
     classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
+    dataset_name = 'kinetics' if 'kinetics' in dataset_address else 'ucf-101'
 
     def _parse_example(example):
         parsed_example = parse_example(example)
-        feature = extract_video(parsed_example)
+        feature = extract_video(parsed_example, dataset_name)
 
         example_address = parsed_example['task']
         label = tf.string_split([example_address], '/')
