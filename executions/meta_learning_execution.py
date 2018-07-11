@@ -11,20 +11,20 @@ import settings
 
 META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 5  # Train an N-way classifier.
+N = 30  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
-BATCH_SIZE = 5  # The batch size.
+BATCH_SIZE = 15  # The batch size.
 META_LEARNING_RATE = 0.00001
 
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
 LEARNING_RATE = 0.001
 
-NUM_GPUS = 1  # Number of GPUs to use for training.
+NUM_GPUS = 2  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
@@ -93,18 +93,18 @@ def initialize():
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
             test_actions=test_actions,
-            batch_size=BATCH_SIZE,
+            batch_size=BATCH_SIZE * NUM_GPUS,
             k=K,
             n=N,
             random_labels=False
         )
     else:
-        print(test_actions[:BATCH_SIZE])
+        print(test_actions[:BATCH_SIZE * NUM_GPUS])
         input_data_ph, input_labels_ph, iterator = create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
             dataset_address=base_address,
             k=K,
-            batch_size=BATCH_SIZE,
-            actions_include=test_actions[:BATCH_SIZE],
+            batch_size=BATCH_SIZE * NUM_GPUS,
+            actions_include=test_actions[:BATCH_SIZE * NUM_GPUS],
         )
         val_data_ph = input_data_ph
         val_labels_ph = input_labels_ph
