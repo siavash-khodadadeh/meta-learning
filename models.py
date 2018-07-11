@@ -332,7 +332,7 @@ class ModelAgnosticMetaLearning(object):
             self.devices = gpu_devices
 
         self.model_cls = model_cls
-        self.meta_learn_rate = meta_learn_rate
+        self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
         self.learning_rate = learning_rate
 
         self.input_data = input_data_ph
@@ -511,6 +511,11 @@ class ModelAgnosticMetaLearning(object):
             self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "SSH:6000")
 
         self.sess.run(tf.global_variables_initializer())
+
+    def get_exponential_decay_learning_rate(self, initial_learning_rate):
+        global_step = tf.Variable(0, trainable=False)
+        learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.8, staircase=True)
+        return learning_rate
 
     def loss_function(self, labels, logits):
         return tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))

@@ -18,14 +18,17 @@ NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 BATCH_SIZE = 5  # The batch size.
+META_LEARNING_RATE = 0.00001
+
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
+LEARNING_RATE = 0.001
 
 NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
-META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/num-iterations-10000/-1100'
+META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/backups/kinetics-from-server/-5000'
 
 
 test_actions = [
@@ -67,6 +70,8 @@ def initialize():
         'num-gpus-{}'.format(NUM_GPUS),
         'random-seed-{}'.format(RANDOM_SEED),
         'num-iterations-{}'.format(NUM_ITERATIONS),
+        'meta-learning-rate-{}'.format(META_LEARNING_RATE),
+        'learning_rate-{}'.format(LEARNING_RATE),
     )
 
     if META_TRAIN:
@@ -113,8 +118,8 @@ def initialize():
         log_dir=log_dir,
         saving_path=saving_path,
         gpu_devices=gpu_devices,
-        meta_learn_rate=0.00001,
-        learning_rate=0.001,
+        meta_learn_rate=META_LEARNING_RATE,
+        learning_rate=LEARNING_RATE,
         log_device_placement=False,
         num_classes=N
     )
