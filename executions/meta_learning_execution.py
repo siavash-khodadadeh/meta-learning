@@ -9,21 +9,23 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 101  # Train an N-way classifier.
+META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
+DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot'.
+N = 5  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
 BATCH_SIZE = 5  # The batch size.
+NUM_META_TEST_ITERATIONS = 5
+REPORT_AFTER_META_TEST_STEP = 1
 
 NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
-META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/kinetics400/model-9800'
+META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/num-iterations-10000/-1100'
 
 
 test_actions = [
@@ -58,7 +60,7 @@ def initialize():
 
     model_dir = os.path.join(
         DATASET,
-        'meta-train'
+        'meta-train',
         '{}-way-classifier'.format(N),
         '{}-shot'.format(K),
         'batch-size-{}'.format(BATCH_SIZE),
@@ -85,18 +87,20 @@ def initialize():
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
-            test_actions=None,
+            test_actions=test_actions,
             batch_size=BATCH_SIZE,
-            k=1,
-            n=101,
-            random_labels=True
+            k=K,
+            n=N,
+            random_labels=False
         )
     else:
-        input_data_ph, input_labels_ph, iterator = \
-            create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
-                k=K,
-                batch_size=BATCH_SIZE,
-            )
+        print(test_actions[:BATCH_SIZE])
+        input_data_ph, input_labels_ph, iterator = create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+            dataset_address=base_address,
+            k=K,
+            batch_size=BATCH_SIZE,
+            actions_include=test_actions[:BATCH_SIZE],
+        )
         val_data_ph = input_data_ph
         val_labels_ph = input_labels_ph
 
@@ -117,6 +121,13 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
+    # data_np, labels_np = maml.sess.run((input_data_ph, input_labels_ph))
+    # for i in range(N):
+    #     print(labels_np[i, :])
+    #     import matplotlib.pyplot as plt
+    #     plt.imshow(data_np[i, 0, :, :, :])
+    #     plt.show()
+
     return maml
 
 
@@ -131,4 +142,4 @@ if __name__ == '__main__':
         )
     else:
         maml.load_model(META_TEST_STARTING_MODEL)
-        maml.meta_test(NUM_ITERATIONS + 1, save_model_per_x_iterations=SAVE_AFTER_STEP)
+        maml.meta_test(NUM_META_TEST_ITERATIONS, save_model_per_x_iterations=REPORT_AFTER_META_TEST_STEP)

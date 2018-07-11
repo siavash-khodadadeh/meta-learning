@@ -183,6 +183,7 @@ def create_k_sample_per_action_iterative_dataset(
 
 
 def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+        dataset_address,
         k,
         batch_size,
         one_hot=True,
@@ -190,7 +191,7 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
         actions_exclude=None
 ):
     dataset = create_k_sample_per_action_iterative_dataset(
-        '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/',
+        dataset_address,
         k=k,
         batch_size=batch_size,
         one_hot=one_hot,

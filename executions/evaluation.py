@@ -14,7 +14,7 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
-SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/ucf-101/meta-test/101-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/num-iterations-100/-40'
+SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-4'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -103,24 +103,34 @@ SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/uc
 # }
 
 
-TEST_ACTIONS_LIST = sorted(os.listdir(BASE_ADDRESS))
-TEST_ACTIONS = {}
+TEST_ACTIONS = {
+    'CleanAndJerk': 1,
+    'MoppingFloor': 3,
+    'FrontCrawl': 2,
+    'Surfing': 4,
+    'Bowling': 0,
+}
 
-counter = 0
-for action in TEST_ACTIONS_LIST:
-    TEST_ACTIONS[action] = counter
-    counter += 1
+# ALL UCF 101
+# TEST_ACTIONS_LIST = sorted(os.listdir(BASE_ADDRESS))
+# TEST_ACTIONS = {}
+
+# counter = 0
+# for action in TEST_ACTIONS_LIST:
+#     TEST_ACTIONS[action] = counter
+#     counter += 1
+# ALL UCF 101 finished
 
 
 def evaluate():
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 101])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 101])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
@@ -133,7 +143,7 @@ def evaluate():
         learning_rate=0.001,
         log_device_placement=False,
         saving_path=None,
-        num_classes=101,
+        num_classes=5,
     )
 
     maml.load_model(path=SAVED_MODEL_ADDRESS)
@@ -143,7 +153,7 @@ def evaluate():
     for action in TEST_ACTIONS.keys():
         class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
-        for file_address in os.listdir(BASE_ADDRESS + action)[:10]:
+        for file_address in os.listdir(BASE_ADDRESS + action):
             video_address = BASE_ADDRESS + action + '/' + file_address
             if len(os.listdir(video_address)) < 16:
                 continue
