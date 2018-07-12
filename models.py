@@ -514,7 +514,7 @@ class ModelAgnosticMetaLearning(object):
 
     def get_exponential_decay_learning_rate(self, initial_learning_rate):
         global_step = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.8, staircase=True)
+        learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.1, staircase=True)
         return learning_rate
 
     def loss_function(self, labels, logits):
