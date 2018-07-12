@@ -355,10 +355,10 @@ class ModelAgnosticMetaLearning(object):
         # Split data such that each part runs on a different GPU
         num_gpu_devices = len(self.devices)
 
-        input_data_splits = tf.split(self.input_data, num_gpu_devices)
-        input_labels_split = tf.split(self.input_labels, num_gpu_devices)
-        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
-        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
+        input_data_splits = tf.split(self.input_data, num_gpu_devices / 2)
+        input_labels_split = tf.split(self.input_labels, num_gpu_devices / 2)
+        input_validation_splits = tf.split(self.input_validation, num_gpu_devices / 2)
+        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices / 2)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
@@ -367,11 +367,9 @@ class ModelAgnosticMetaLearning(object):
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
-                self.devices,
+                self.devices[:num_gpu_devices / 2],
                 input_data_splits,
                 input_labels_split,
-                input_validation_splits,
-                input_validation_labels_splits
             )
         ):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
@@ -407,17 +405,17 @@ class ModelAgnosticMetaLearning(object):
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
         with tf.variable_scope('average_inner_loss'):
-            with tf.device('/cpu:0'):
+            with tf.device('/gpu:0'):
                 tf.summary.scalar(
                     'Inner Loss Average:',
                     tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
                 )
 
         with tf.variable_scope('average_inner_gradients'):
-            with tf.device('/cpu:0'):
+            with tf.device('/gpu:0'):
                 averaged_inner_gradients = average_gradients(self.inner_grads)
 
-            with tf.device('/cpu:0'):
+            with tf.device('/gpu:0'):
                 updated_vars = {}
                 for grad_info in averaged_inner_gradients:
                     if grad_info[0] is not None:
@@ -429,9 +427,7 @@ class ModelAgnosticMetaLearning(object):
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
-                self.devices,
-                input_data_splits,
-                input_labels_split,
+                self.devices[num_gpu_devices / 2:],
                 input_validation_splits,
                 input_validation_labels_splits
             )
@@ -472,14 +468,14 @@ class ModelAgnosticMetaLearning(object):
                             self.tower_neural_gradients.append(loss_gradients)
 
         with tf.variable_scope('average_meta_loss'):
-            with tf.device('/cpu:0'):
+            with tf.device('/gpu:0'):
                 tf.summary.scalar(
                     'Meta Loss Average:',
                     tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
                 )
 
         with tf.variable_scope('average_gradients'):
-            with tf.device('/cpu:0'):
+            with tf.device('/gpu:0'):
                 averaged_grads = average_gradients(self.tower_meta_grads)
 
                 self.train_op = meta_optimizer.apply_gradients(averaged_grads)
@@ -488,7 +484,7 @@ class ModelAgnosticMetaLearning(object):
                 averaged_neural_grads = average_gradients(self.tower_neural_gradients)
                 self.loss_func_op = neural_loss_optimizer.apply_gradients(averaged_neural_grads)
 
-        with tf.device('/cpu:0'):
+        with tf.device('/gpu:0'):
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
 

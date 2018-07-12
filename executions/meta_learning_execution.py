@@ -11,24 +11,24 @@ import settings
 
 META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 5  # Train an N-way classifier.
+N = 30  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 100
-BATCH_SIZE = 5  # The batch size.
+BATCH_SIZE = 15  # The batch size.
 META_LEARNING_RATE = 0.00001
+LEARNING_RATE = 0.001
 
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
-LEARNING_RATE = 0.001
 
-NUM_GPUS = 1  # Number of GPUs to use for training.
+NUM_GPUS = 2  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
-META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/backups/kinetics-from-server/-5000'
+META_TEST_STARTING_MODEL = settings.SAVED_MODELS_ADDRESS + '/backups/kinetics-from-server/-8000'
 
 
 test_actions = [
@@ -71,7 +71,7 @@ def initialize():
         'random-seed-{}'.format(RANDOM_SEED),
         'num-iterations-{}'.format(NUM_ITERATIONS),
         'meta-learning-rate-{}'.format(META_LEARNING_RATE),
-        'learning_rate-{}'.format(LEARNING_RATE),
+        'learning-rate-{}'.format(LEARNING_RATE),
     )
 
     if META_TRAIN:
