@@ -17,14 +17,14 @@ K = 1  # Train a K-shot learner
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 500
-BATCH_SIZE = 5  # The batch size.
+BATCH_SIZE = 4  # The batch size.
 META_LEARNING_RATE = 0.00001
 LEARNING_RATE = 0.001
 
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
 
-NUM_GPUS = 4  # Number of GPUs to use for training.
+NUM_GPUS = 5  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
