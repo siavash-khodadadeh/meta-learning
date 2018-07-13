@@ -11,7 +11,7 @@ import settings
 
 META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 20  # Train an N-way classifier.
+N = 36  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
@@ -24,7 +24,7 @@ LEARNING_RATE = 0.001
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
 
-NUM_GPUS = 5  # Number of GPUs to use for training.
+NUM_GPUS = 9  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
