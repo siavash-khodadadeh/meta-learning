@@ -396,7 +396,7 @@ class ModelAgnosticMetaLearning(object):
                         grads = optimizer.compute_gradients(
                             train_loss,
                             var_list=self.model_variables,
-                            colocate_gradients_with_ops=False
+                            colocate_gradients_with_ops=True
                         )
                         self.inner_grads.append(grads)
 
@@ -448,7 +448,7 @@ class ModelAgnosticMetaLearning(object):
                         gradients = meta_optimizer.compute_gradients(
                             meta_loss,
                             var_list=self.model_variables,
-                            colocate_gradients_with_ops=False
+                            colocate_gradients_with_ops=True
                         )
 
                         for grad_info in gradients:
