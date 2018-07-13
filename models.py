@@ -327,10 +327,9 @@ class ModelAgnosticMetaLearning(object):
             num_classes=None,
     ):
         if gpu_devices is None:
-            self.devices = '/gpu:0',
+            self.devices = ('/gpu:0', ),
         else:
             self.devices = gpu_devices
-            self.devices = self.devices[1:]
 
         self.model_cls = model_cls
         self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
@@ -356,10 +355,10 @@ class ModelAgnosticMetaLearning(object):
         # Split data such that each part runs on a different GPU
         num_gpu_devices = len(self.devices)
 
-        input_data_splits = tf.split(self.input_data, num_gpu_devices / 2)
-        input_labels_split = tf.split(self.input_labels, num_gpu_devices / 2)
-        input_validation_splits = tf.split(self.input_validation, num_gpu_devices / 2)
-        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices / 2)
+        input_data_splits = tf.split(self.input_data, num_gpu_devices)
+        input_labels_split = tf.split(self.input_labels, num_gpu_devices)
+        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
+        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
@@ -373,7 +372,7 @@ class ModelAgnosticMetaLearning(object):
 
         for device_idx, (device_name, input_data, input_labels) in enumerate(
             zip(
-                self.devices[:num_gpu_devices / 2],
+                self.devices,
                 input_data_splits,
                 input_labels_split,
             )
@@ -433,7 +432,7 @@ class ModelAgnosticMetaLearning(object):
 
         for device_idx, (device_name, input_validation, input_validation_labels) in enumerate(
             zip(
-                self.devices[num_gpu_devices / 2:],
+                self.devices,
                 input_validation_splits,
                 input_validation_labels_splits
             )
