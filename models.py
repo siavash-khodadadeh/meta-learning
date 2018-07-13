@@ -320,16 +320,17 @@ class ModelAgnosticMetaLearning(object):
             neural_loss_learning_rate=0.001,
             meta_learn_rate=0.00001,
             learning_rate=0.0001,
-            gpu_devices=None,
+            num_gpu_devices=None,
             learn_the_loss_function=False,
             debug=False,
             log_device_placement=True,
             num_classes=None,
     ):
-        if gpu_devices is None:
+        if num_gpu_devices is None:
             self.devices = ('/gpu:0', ),
         else:
-            self.devices = gpu_devices
+            self.devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices + 1)]
+            self.devices = self.devices[1:]
 
         self.model_cls = model_cls
         self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)

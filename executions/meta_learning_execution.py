@@ -81,8 +81,6 @@ def initialize():
         log_dir = os.path.join(settings.BASE_LOG_ADDRESS, 'meta-test')
         saving_path = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test', 'model')
 
-    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
-
     if DATASET == 'ucf-101':
         base_address = '/home/siavash/ucf101_tfrecords/'
         # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
@@ -117,7 +115,7 @@ def initialize():
         val_labels_ph,
         log_dir=log_dir,
         saving_path=saving_path,
-        gpu_devices=gpu_devices,
+        num_gpu_devices=NUM_GPUS,
         meta_learn_rate=META_LEARNING_RATE,
         learning_rate=LEARNING_RATE,
         log_device_placement=False,
