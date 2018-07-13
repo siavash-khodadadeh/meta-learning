@@ -330,6 +330,7 @@ class ModelAgnosticMetaLearning(object):
             self.devices = '/gpu:0',
         else:
             self.devices = gpu_devices
+            self.devices = self.devices[1:]
 
         self.model_cls = model_cls
         self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
@@ -364,6 +365,11 @@ class ModelAgnosticMetaLearning(object):
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
         if learn_the_loss_function:
             neural_loss_optimizer = tf.train.AdamOptimizer(learning_rate=neural_loss_learning_rate)
+
+        with tf.device('/gpu:0'):
+            with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
+                self.model_cls(input_data_splits[0], num_classes=num_classes)
+                self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
         for device_idx, (device_name, input_data, input_labels) in enumerate(
             zip(
