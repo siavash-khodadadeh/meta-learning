@@ -93,18 +93,18 @@ def initialize():
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
             test_actions=test_actions,
-            batch_size=BATCH_SIZE * NUM_GPUS,
+            batch_size=BATCH_SIZE * (NUM_GPUS - 1),
             k=K,
             n=N,
             random_labels=False
         )
     else:
-        print(test_actions[:BATCH_SIZE * NUM_GPUS])
+        print(test_actions[:BATCH_SIZE * (NUM_GPUS - 1)])
         input_data_ph, input_labels_ph, iterator = create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
             dataset_address=base_address,
             k=K,
-            batch_size=BATCH_SIZE * NUM_GPUS,
-            actions_include=test_actions[:BATCH_SIZE * NUM_GPUS],
+            batch_size=BATCH_SIZE * (NUM_GPUS - 1),
+            actions_include=test_actions[:BATCH_SIZE * (NUM_GPUS - 1)],
         )
         val_data_ph = input_data_ph
         val_labels_ph = input_labels_ph
