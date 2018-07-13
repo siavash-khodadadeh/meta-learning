@@ -419,7 +419,11 @@ class ModelAgnosticMetaLearning(object):
 
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/gpu:0'):
-                averaged_inner_gradients = average_gradients(self.inner_grads)
+                averaged_inner_gradients1 = average_gradients(self.inner_grads[:2])
+                averaged_inner_gradients2 = average_gradients(self.inner_grads[2:4])
+                averaged_inner_gradients = average_gradients([averaged_inner_gradients1, averaged_inner_gradients2])
+                averaged_inner_gradients3 = average_gradients(self.inner_grads[4:])
+                averaged_inner_gradients = average_gradients([averaged_inner_gradients, averaged_inner_gradients3])
 
             with tf.device('/gpu:0'):
                 updated_vars = {}
