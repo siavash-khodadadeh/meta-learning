@@ -11,20 +11,20 @@ import settings
 
 META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot'.
-N = 20  # Train an N-way classifier.
+N = 15  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
 SAVE_AFTER_STEP = 500
-BATCH_SIZE = 10  # The batch size.
+BATCH_SIZE = 15  # The batch size.
 META_LEARNING_RATE = 0.00001
 LEARNING_RATE = 0.001
 
 NUM_META_TEST_ITERATIONS = 5
 REPORT_AFTER_META_TEST_STEP = 1
 
-NUM_GPUS = 3  # Number of GPUs to use for training.
+NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
@@ -81,7 +81,10 @@ def initialize():
         log_dir = os.path.join(settings.BASE_LOG_ADDRESS, 'meta-test')
         saving_path = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test', 'model')
 
-    gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
+    if NUM_GPUS != 1:
+        gpu_devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(NUM_GPUS)]
+    else:
+        gpu_devices = None
 
     if DATASET == 'ucf-101':
         base_address = '/home/siavash/ucf101_tfrecords/'
