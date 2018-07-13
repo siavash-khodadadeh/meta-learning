@@ -365,7 +365,7 @@ class ModelAgnosticMetaLearning(object):
         if learn_the_loss_function:
             neural_loss_optimizer = tf.train.AdamOptimizer(learning_rate=neural_loss_learning_rate)
 
-        for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
+        for device_idx, (device_name, input_data, input_labels) in enumerate(
             zip(
                 self.devices[:num_gpu_devices / 2],
                 input_data_splits,
@@ -425,7 +425,7 @@ class ModelAgnosticMetaLearning(object):
 
                     self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
 
-        for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
+        for device_idx, (device_name, input_validation, input_validation_labels) in enumerate(
             zip(
                 self.devices[num_gpu_devices / 2:],
                 input_validation_splits,
