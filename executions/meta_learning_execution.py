@@ -24,7 +24,7 @@ LEARNING_RATE = 0.001
 NUM_META_TEST_ITERATIONS = 6
 REPORT_AFTER_META_TEST_STEP = 1
 
-NUM_GPUS = 5  # Number of GPUs to use for training.
+NUM_GPUS = 6  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
