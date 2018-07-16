@@ -419,9 +419,10 @@ class ModelAgnosticMetaLearning(object):
 
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/gpu:0'):
-                averaged_inner_gradients = average_gradients(self.inner_grads[:2])
-                for i in range(2, num_gpu_devices):
-                    averaged_inner_gradients = average_gradients((i * averaged_inner_gradients, self.inner_grads[i]))
+                averaged_inner_gradients = average_gradients(self.inner_grads)
+                # averaged_inner_gradients = average_gradients(self.inner_grads[:2])
+                # for i in range(2, num_gpu_devices):
+                #     averaged_inner_gradients = average_gradients((i * averaged_inner_gradients, self.inner_grads[i]))
 
             with tf.device('/gpu:0'):
                 updated_vars = {}
@@ -484,9 +485,10 @@ class ModelAgnosticMetaLearning(object):
 
         with tf.variable_scope('average_gradients'):
             with tf.device('/gpu:0'):
-                averaged_grads = average_gradients(self.tower_meta_grads[:2])
-                for i in range(2, num_gpu_devices):
-                    averaged_grads = average_gradients((i * averaged_grads, self.tower_meta_grads[i]))
+                averaged_grads = average_gradients(self.tower_meta_grads)
+                # averaged_grads = average_gradients(self.tower_meta_grads[:2])
+                # for i in range(2, num_gpu_devices):
+                #     averaged_grads = average_gradients((i * averaged_grads, self.tower_meta_grads[i]))
 
                 self.train_op = meta_optimizer.apply_gradients(averaged_grads)
 
