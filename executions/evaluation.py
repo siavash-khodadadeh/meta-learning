@@ -14,7 +14,8 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
-SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-1'
+# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-1'
+SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/model/-1'
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -104,11 +105,16 @@ SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/me
 
 
 TEST_ACTIONS = {
-    'CleanAndJerk': 1,
-    'MoppingFloor': 3,
-    'FrontCrawl': 2,
-    'Surfing': 4,
+    'PlayingSitar': 5,
+    'MoppingFloor': 4,
+    'FrontCrawl': 3,
+    'Surfing': 9,
     'Bowling': 0,
+    'SoccerPenalty': 7,
+    'SumoWrestling': 8,
+    'Shotput': 6,
+    'CleanAndJerk': 1,
+    'FloorGymnastics': 2,
 }
 
 # ALL UCF 101
@@ -143,7 +149,7 @@ def evaluate():
         learning_rate=0.001,
         log_device_placement=False,
         saving_path=None,
-        num_classes=5,
+        num_classes=10,
     )
 
     maml.load_model(path=SAVED_MODEL_ADDRESS)

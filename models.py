@@ -326,12 +326,7 @@ class ModelAgnosticMetaLearning(object):
             log_device_placement=True,
             num_classes=None,
     ):
-        if num_gpu_devices is None:
-            self.devices = ('/gpu:0', ),
-        else:
-            self.devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices + 1)]
-            self.devices = self.devices[1:]
-
+        self.devices = self._get_gpu_devices(num_gpu_devices)
         self.model_cls = model_cls
         self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
         self.learning_rate = learning_rate
@@ -354,12 +349,11 @@ class ModelAgnosticMetaLearning(object):
             self.tower_neural_gradients = []
 
         # Split data such that each part runs on a different GPU
-        num_gpu_devices = len(self.devices)
-
-        input_data_splits = tf.split(self.input_data, num_gpu_devices)
-        input_labels_split = tf.split(self.input_labels, num_gpu_devices)
-        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
-        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
+        data_splits = self._split_data_between_devices()
+        input_data_splits = data_splits[0]
+        input_labels_splits = data_splits[1]
+        input_validation_splits = data_splits[2]
+        input_validation_labels_splits = data_splits[3]
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
@@ -375,7 +369,7 @@ class ModelAgnosticMetaLearning(object):
             zip(
                 self.devices,
                 input_data_splits,
-                input_labels_split,
+                input_labels_splits,
             )
         ):
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
@@ -520,6 +514,14 @@ class ModelAgnosticMetaLearning(object):
 
         self.sess.run(tf.global_variables_initializer())
 
+    def _get_gpu_devices(self, num_gpu_devices):
+        if num_gpu_devices is None:
+            devices = ['/gpu:0', ]
+        else:
+            devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices + 1)]
+            devices = devices[1:]
+        return devices
+
     def get_exponential_decay_learning_rate(self, initial_learning_rate):
         global_step = tf.Variable(0, trainable=False)
         learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.1, staircase=True)
@@ -578,3 +580,12 @@ class ModelAgnosticMetaLearning(object):
             self.file_writer.add_summary(merged_summary, global_step=it)
             if it % save_model_per_x_iterations == 0:
                 self.save_model(path=self.saving_path, step=it)
+
+    def _split_data_between_devices(self):
+        num_gpu_devices = len(self.devices)
+
+        input_data_splits = tf.split(self.input_data, num_gpu_devices)
+        input_labels_splits = tf.split(self.input_labels, num_gpu_devices)
+        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
+        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
+        return input_data_splits, input_labels_splits, input_validation_splits, input_validation_labels_splits
