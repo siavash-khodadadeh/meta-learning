@@ -3,7 +3,8 @@ import os
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from tf_datasets import create_k_sample_per_action_iterative_dataset, create_data_feed_for_train
+from datasets.tf_datasets import create_k_sample_per_action_iterative_dataset, create_data_feed_for_train, \
+    create_diva_data_feed_for_k_sample_per_action_iterative_dataset
 
 
 def test_create_data_feed_for_ucf101():
@@ -30,6 +31,25 @@ def test_create_data_feed_for_ucf101():
                 plt.imshow(data_np[vid, 0, :, :, :])
                 plt.show()
                 plt.imshow(val_data_np[vid, 0, :, :, :])
+                plt.show()
+
+
+def test_create_feed_for_diva():
+    input_data_ph, input_labels_ph, iterator = create_diva_data_feed_for_k_sample_per_action_iterative_dataset(
+        dataset_address='/home/siavash/DIVA-TF-RECORDS/train/',
+        k=1,
+        batch_size=5,
+    )
+
+    with tf.Session() as sess:
+        sess.run(iterator.initializer)
+        tf.tables_initializer().run()
+        for _ in range(150):
+            data_np, labels_np = sess.run((input_data_ph, input_labels_ph))
+
+            print(labels_np)
+            for vid in range(15):
+                plt.imshow(data_np[vid, 0, :, :, :])
                 plt.show()
 
 
@@ -62,4 +82,5 @@ def test_create_k_sample_per_action_iterative_dataset():
 
 if __name__ == '__main__':
     # test_create_k_sample_per_action_iterative_dataset()
-    test_create_data_feed_for_ucf101()
+    # test_create_data_feed_for_ucf101()
+    test_create_feed_for_diva()

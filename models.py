@@ -428,8 +428,9 @@ class ModelAgnosticMetaLearning(object):
                 averaged_neural_grads = average_gradients(self.tower_neural_gradients)
                 self.loss_func_op = self.neural_loss_optimizer.apply_gradients(averaged_neural_grads)
 
-        self.log_dir = self._create_log_dir(log_dir)
-        self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
+        if log_dir is not None:
+            self.log_dir = self._create_log_dir(log_dir)
+            self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
         self.merged = tf.summary.merge_all()
 
         self.saving_path = saving_path
@@ -509,6 +510,20 @@ class ModelAgnosticMetaLearning(object):
             self.file_writer.add_summary(merged_summary, global_step=it)
             if it % save_model_per_x_iterations == 0:
                 self.save_model(path=self.saving_path, step=it)
+
+    def evaluate(self, input_data=None):
+        if input_data is None:
+            outputs, real_labels = self.sess.run((self.inner_model_out, self.input_labels))
+        else:
+            outputs, real_labels = self.sess.run((self.inner_model_out, self.input_labels), feed_dict={
+                self.input_data: input_data
+            })
+        import numpy as np
+        print(outputs)
+        print(real_labels)
+        print(np.argmax(outputs, 1))
+        print(np.argmax(real_labels, 1))
+        return outputs
 
     def _split_data_between_devices(self):
         num_gpu_devices = len(self.devices)

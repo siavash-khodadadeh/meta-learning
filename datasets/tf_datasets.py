@@ -76,7 +76,12 @@ def get_action_tf_dataset(
     actions_include=None
 ):
     classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
-    dataset_name = 'kinetics' if 'kinetics' in dataset_address else 'ucf-101'
+    if 'kinetics' in dataset_address:
+        dataset_name = 'kinetics'
+    elif 'DIVA' in dataset_address:
+        dataset_name = 'diva'
+    else:
+        dataset_name = 'ucf-101'
 
     def _parse_example(example):
         parsed_example = parse_example(example)
@@ -155,7 +160,12 @@ def create_k_sample_per_action_iterative_dataset(
         actions_exclude=None,
 ):
     classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude)
-    dataset_name = 'kinetics' if 'kinetics' in dataset_address else 'ucf-101'
+    if 'kinetics' in dataset_address:
+        dataset_name = 'kinetics'
+    elif 'DIVA' in dataset_address:
+        dataset_name = 'diva'
+    else:
+        dataset_name = 'ucf-101'
 
     def _parse_example(example):
         parsed_example = parse_example(example)
@@ -180,6 +190,18 @@ def create_k_sample_per_action_iterative_dataset(
     dataset = dataset.map(_parse_example)
     dataset = dataset.batch(batch_size)
     return dataset
+
+
+def create_diva_data_feed_for_k_sample_per_action_iterative_dataset(dataset_address, k, batch_size):
+    dataset = create_k_sample_per_action_iterative_dataset(dataset_address, k, batch_size, one_hot=True)
+    iterator = dataset.make_initializable_iterator()
+    next_batch = iterator.get_next()
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0], tf.float32)
+        input_labels_ph = next_batch[1]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
+
+    return input_data_ph, input_labels_ph, iterator
 
 
 def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
