@@ -4,7 +4,8 @@ import random
 import tensorflow as tf
 
 
-from tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, create_data_feed_for_train
+from datasets.tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, \
+    create_data_feed_for_train
 from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
