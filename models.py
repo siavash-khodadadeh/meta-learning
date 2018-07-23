@@ -404,29 +404,21 @@ class ModelAgnosticMetaLearning(object):
                             if grad_info[0] is not None:
                                 tf.summary.histogram(grad_info[1].name, grad_info[0])
 
+                    updated_vars = {}
+                    for grad_info in grads:
+                        if grad_info[0] is not None:
+                            updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
+                        else:
+                            updated_vars[grad_info[1].name[6:]] = grad_info[1]
+
+                        self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
+
         with tf.variable_scope('average_inner_loss'):
             with tf.device('/gpu:0'):
                 tf.summary.scalar(
                     'Inner Loss Average:',
                     tf.add_n(self.inner_losses) / tf.cast(tf.constant(num_gpu_devices), dtype=tf.float32)
                 )
-
-        with tf.variable_scope('average_inner_gradients'):
-            with tf.device('/gpu:0'):
-                averaged_inner_gradients = average_gradients(self.inner_grads)
-                # averaged_inner_gradients = average_gradients(self.inner_grads[:2])
-                # for i in range(2, num_gpu_devices):
-                #     averaged_inner_gradients = average_gradients((i * averaged_inner_gradients, self.inner_grads[i]))
-
-            with tf.device('/gpu:0'):
-                updated_vars = {}
-                for grad_info in averaged_inner_gradients:
-                    if grad_info[0] is not None:
-                        updated_vars[grad_info[1].name[6:]] = grad_info[1] - self.learning_rate * grad_info[0]
-                    else:
-                        updated_vars[grad_info[1].name[6:]] = grad_info[1]
-
-                    self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
 
         for device_idx, (device_name, input_validation, input_validation_labels) in enumerate(
             zip(
