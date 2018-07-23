@@ -2,23 +2,30 @@ import tensorflow as tf
 
 import numpy as np
 
-from data_generator import DataGenerator
+import settings
+from datasets.data_generator import DataGenerator
 from models import ModelAgnosticMetaLearning, NeuralNetwork
 
-
-LOG_DIR = 'logs/omniglot/'
+LOG_DIR = settings.BASE_LOG_ADDRESS + '/omniglot/'
 TRAIN = True
 NUM_CLASSES = 5
 UPDATE_BATCH_SIZE = 5
 META_BATCH_SIZE = 1
 MAML_TRAIN_ITERATIONS = 1001
 MAML_ADAPTATION_ITERATIONS = 3
+SAVING_PATH = settings.SAVED_MODELS_ADDRESS + '/omniglot'
+BINARY_CLASSIFICATION = True
+if BINARY_CLASSIFICATION:
+    NUM_CLASSES = 2
 
 
 def train_maml():
     data_generator = DataGenerator(UPDATE_BATCH_SIZE * 2, META_BATCH_SIZE)
     with tf.variable_scope('data_reader'):
-        image_tensor, label_tensor = data_generator.make_data_tensor(train=TRAIN)
+        image_tensor, label_tensor = data_generator.make_data_tensor(
+            train=TRAIN,
+            binary_classification=BINARY_CLASSIFICATION
+        )
 
     with tf.variable_scope('train_data'):
         input_data_ph = tf.slice(image_tensor, [0, 0, 0], [-1, NUM_CLASSES * UPDATE_BATCH_SIZE, -1], name='train')
@@ -43,9 +50,8 @@ def train_maml():
         log_dir=LOG_DIR,
         learning_rate=0.001,
         meta_learn_rate=0.0001,
-        train=TRAIN,
-        num_classes=NUM_CLASSES,
-        log_device_placement=False
+        log_device_placement=False,
+        saving_path=SAVING_PATH,
     )
     tf.train.start_queue_runners(maml.sess)
 
@@ -60,9 +66,11 @@ def train_maml():
                 merged_summary = maml.sess.run(maml.merged)
                 maml.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
+            if it % 200 == 0:
+                maml.save_model(path=SAVING_PATH, step=it)
 
         if it != 0:
-            maml.save_model(path='saved_models/omniglot/model', step=it)
+            maml.save_model(path=SAVING_PATH, step=it)
 
     else:
         maml.load_model('saved_models/omniglot/model-1000')
@@ -72,7 +80,7 @@ def train_maml():
         )
 
         for it in range(MAML_ADAPTATION_ITERATIONS):
-            maml.sess.run(maml.inner_train_op, feed_dict={
+            maml.sess.run(maml.inner_train_ops, feed_dict={
                 maml.input_data: test_batch,
                 maml.input_labels: test_batch_labels,
             })
@@ -87,13 +95,10 @@ def train_maml():
                 })
                 maml.file_writer.add_summary(summary, global_step=it)
 
-        outputs, loss = maml.sess.run([maml.model_out_train, maml.train_loss], feed_dict={
+        outputs = maml.sess.run([maml.inner_model_out, maml], feed_dict={
             maml.input_data: test_val_batch,
             maml.input_labels: test_val_batch_labels,
         })
-
-        print('Loss:')
-        print(loss)
 
         print('model output:')
         outputs_np = np.argmax(outputs, axis=1)

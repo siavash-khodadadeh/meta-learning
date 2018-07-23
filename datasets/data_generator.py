@@ -4,6 +4,7 @@ import os
 import random
 import tensorflow as tf
 
+import settings
 from utils import get_images
 
 
@@ -16,7 +17,7 @@ class DataGenerator(object):
         self.dim_input = np.prod(self.img_size)
         self.dim_output = self.num_classes
         # data that is pre-resized using PIL with lanczos filter
-        data_folder = 'data/omniglot_resized/'
+        data_folder = settings.PROJECT_ADDRESS + '/data/omniglot_resized/'
 
         character_folders = [
             os.path.join(data_folder, family, character)
@@ -38,7 +39,7 @@ class DataGenerator(object):
         self.rotations = [0, 90, 180, 270]
         self.do_rotation = True
 
-    def make_data_tensor(self, train=True):
+    def make_data_tensor(self, train=True, binary_classification=False):
         if train:
             folders = self.metatrain_character_folders
             # number of tasks, not number of meta-iterations. (divide by metabatch size to measure)
@@ -61,6 +62,8 @@ class DataGenerator(object):
             )
             # make sure the above isn't randomized order
             labels = [li[0] for li in labels_and_images]
+            if binary_classification:
+                labels = [1 if labels[i] == 3 else 0 for i in range(len(labels))]
             filenames = [li[1] for li in labels_and_images]
             all_filenames.extend(filenames)
 
@@ -118,6 +121,9 @@ class DataGenerator(object):
             all_label_batches.append(new_label_list)
         all_image_batches = tf.stack(all_image_batches)
         all_label_batches = tf.stack(all_label_batches)
-        all_label_batches = tf.one_hot(all_label_batches, self.num_classes)
+        if binary_classification:
+            all_label_batches = tf.one_hot(all_label_batches, 2)
+        else:
+            all_label_batches = tf.one_hot(all_label_batches, self.num_classes)
         return all_image_batches, all_label_batches
 
