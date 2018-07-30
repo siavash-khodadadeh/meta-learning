@@ -93,7 +93,6 @@ def initialize():
     else:
         base_address = '/home/siavash/kinetics_tfrecords/'
 
-    table = None
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
@@ -146,7 +145,7 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
-    if table is not None:
+    if not META_TRAIN:
         print(maml.sess.run(table.export()))
 
     return maml
