@@ -580,11 +580,9 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
         input_validation_labels_ph,
         log_dir,
         saving_path,
-        neural_loss_learning_rate=0.001,
         meta_learn_rate=0.00001,
         learning_rate=0.0001,
         num_gpu_devices=None,
-        learn_the_loss_function=False,
         debug=False,
         log_device_placement=True,
     ):
@@ -596,20 +594,18 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
             input_validation_labels_ph,
             log_dir,
             saving_path,
-            neural_loss_learning_rate,
             meta_learn_rate,
             learning_rate,
             num_gpu_devices,
-            learn_the_loss_function,
             debug,
             log_device_placement,
             num_classes=1,
         )
         self.model_outputs = []
 
-    def _compute_inner_gradients(self):
+    def _compute_inner_gradients(self, train_loss):
         grads = self.optimizer.compute_gradients(
-            self.train_loss,
+            train_loss,
             var_list=self.model_variables[-4:],
             colocate_gradients_with_ops=True
         )
