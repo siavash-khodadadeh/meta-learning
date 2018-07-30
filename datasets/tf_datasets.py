@@ -97,7 +97,7 @@ def get_action_tf_dataset(
 
     classes_list = [dataset_address + class_name + '/*' for class_name in classes_list]
     per_class_datasets = [
-        tf.data.TFRecordDataset(tf.data.Dataset.list_files(directory).repeat(-1)) for directory in classes_list
+        tf.data.TFRecordDataset(tf.data.Dataset.list_files(directory)).repeat(-1) for directory in classes_list
     ]
     classes_per_batch_dataset = tf.contrib.data.Counter().map(
         lambda _: tf.random_shuffle(tf.range(len(classes_list)))[:num_classes_per_batch]
