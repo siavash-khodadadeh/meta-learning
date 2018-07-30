@@ -11,8 +11,8 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
+META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
+DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
 N = 5  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
@@ -93,6 +93,7 @@ def initialize():
     else:
         base_address = '/home/siavash/kinetics_tfrecords/'
 
+    table = None
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
@@ -105,12 +106,13 @@ def initialize():
     else:
         if DATASET == 'ucf-101' or DATASET == 'kinetics':
             print(test_actions[:BATCH_SIZE * NUM_GPUS])
-            input_data_ph, input_labels_ph, iterator = create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
-                dataset_address=base_address,
-                k=K,
-                batch_size=BATCH_SIZE * NUM_GPUS,
-                actions_include=test_actions[:BATCH_SIZE * NUM_GPUS],
-            )
+            input_data_ph, input_labels_ph, iterator, table = \
+                create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
+                    dataset_address=base_address,
+                    k=K,
+                    batch_size=BATCH_SIZE * NUM_GPUS,
+                    actions_include=test_actions[:BATCH_SIZE * NUM_GPUS],
+                )
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
         else:
@@ -119,7 +121,7 @@ def initialize():
             #     k=K,
             #     batch_size=BATCH_SIZE * NUM_GPUS,
             # )
-            input_data_ph, input_labels_ph, iterator = \
+            input_data_ph, input_labels_ph, iterator, table = \
                 create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
                     dataset_address=base_address
                 )
@@ -144,12 +146,8 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
-    # data_np, labels_np = maml.sess.run((input_data_ph, input_labels_ph))
-    # for i in range(N):
-    #     print(labels_np[i, :])
-    #     import matplotlib.pyplot as plt
-    #     plt.imshow(data_np[i, 0, :, :, :])
-    #     plt.show()
+    if table is not None:
+        print(maml.sess.run(table.export()))
 
     return maml
 

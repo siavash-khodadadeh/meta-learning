@@ -64,6 +64,7 @@ def prepare_classes_list_and_table(dataset_address, actions_include=None, action
 
     mapping_strings = tf.constant(classes_list)
     table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
+
     return classes_list, table
 
 
@@ -189,11 +190,11 @@ def create_k_sample_per_action_iterative_dataset(
     dataset = tf.data.TFRecordDataset(examples).shuffle(100).repeat(-1)
     dataset = dataset.map(_parse_example)
     dataset = dataset.batch(batch_size)
-    return dataset
+    return dataset, table
 
 
 def create_diva_data_feed_for_k_sample_per_action_iterative_dataset(dataset_address, k, batch_size):
-    dataset = create_k_sample_per_action_iterative_dataset(dataset_address, k, batch_size, one_hot=True)
+    dataset, table = create_k_sample_per_action_iterative_dataset(dataset_address, k, batch_size, one_hot=True)
     iterator = dataset.make_initializable_iterator()
     next_batch = iterator.get_next()
     with tf.variable_scope('train_data'):
@@ -201,7 +202,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset(dataset_addr
         input_labels_ph = next_batch[1]
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
 
-    return input_data_ph, input_labels_ph, iterator
+    return input_data_ph, input_labels_ph, iterator, table
 
 
 def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
@@ -212,7 +213,7 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
         actions_include=None,
         actions_exclude=None
 ):
-    dataset = create_k_sample_per_action_iterative_dataset(
+    dataset, table = create_k_sample_per_action_iterative_dataset(
         dataset_address,
         k=k,
         batch_size=batch_size,
@@ -228,7 +229,7 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
         input_labels_ph = next_batch[1]
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
 
-    return input_data_ph, input_labels_ph, iterator
+    return input_data_ph, input_labels_ph, iterator, table
 
 
 def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
@@ -279,4 +280,4 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         input_labels_ph = next_batch[1]
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=5)
 
-    return input_data_ph, input_labels_ph, iterator
+    return input_data_ph, input_labels_ph, iterator, table
