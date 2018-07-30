@@ -33,7 +33,7 @@ STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/spor
 
 META_TEST_MODEL = 'kinetics/meta-train/27-way-classifier/1-shot/batch-size-9/num-gpus-3/random-seed-100/' \
                   'num-iterations-1000/meta-learning-rate-0.0001/learning-rate-0.001/-1000'
-META_TEST_STARTING_MODEL = os.path.join(settings.SAVED_MODELS_ADDRESS + META_TEST_MODEL)
+META_TEST_STARTING_MODEL = os.path.join(settings.SAVED_MODELS_ADDRESS, META_TEST_MODEL)
 
 
 test_actions = os.listdir('/home/siavash/ucf101_tfrecords/')
