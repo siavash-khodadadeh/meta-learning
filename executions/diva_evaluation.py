@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import tensorflow as tf
 import numpy as np
@@ -7,12 +8,33 @@ import settings
 from models import ModelAgnosticMetaLearning, C3DNetwork
 
 base_address = '/home/siavash/DIVA-TF-RECORDS/validation'
+labels_base_address = '/home/siavash/DIVA-FewShot/validation'
+
+
+REAL_LABELS = {
+    5: "specialized_texting_phone",
+    12: "specialized_talking_phone",
+    22: "Open_Trunk",
+    23: "Closing_Trunk",
+    24: "vehicle_u_turn",
+}
+
+
+network_labels_real_labels_mapping = {
+    0: 23,
+    1: 22,
+    2: 12,
+    3: 5,
+    4: 24,
+}
+
+
 action_labels = {
-    'close_trunk': 0,
+    'Closing_Trunk': 0,
+    'Open_Trunk': 1,
     'specialized_talking_phone': 2,
     'specialized_texting_phone': 3,
     'vehicle_u_turn': 4,
-    'open_trunk': 1,
 }
 
 with tf.variable_scope('train_data'):
@@ -32,7 +54,7 @@ maml = ModelAgnosticMetaLearning(
     input_labels_ph,
     val_data_ph,
     val_labels_ph,
-    log_dir=None,
+    log_dir=settings.BASE_LOG_ADDRESS + '/logs/diva/',
     saving_path=None,
     num_gpu_devices=1,
     meta_learn_rate=0.00001,
@@ -42,7 +64,7 @@ maml = ModelAgnosticMetaLearning(
 )
 
 
-maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-5')
+maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-60')
 
 
 def extract_video(example):
@@ -66,9 +88,10 @@ def extract_video(example):
     return clip
 
 
-for action, label in action_labels.items():
+for action, _ in action_labels.items():
     correct = 0
     total = 0
+    guess_table = [0] * 5
     print(action)
     for file_address in os.listdir(os.path.join(base_address, action)):
         tf_record_address = os.path.join(base_address, action, file_address)
@@ -80,11 +103,30 @@ for action, label in action_labels.items():
         outputs = maml.sess.run(maml.inner_model_out, feed_dict={
             input_data_ph: video_np
         })
-        guessed_label = np.argmax(outputs)
-        print(guessed_label)
-        if guessed_label == label:
-            correct += 1
-        total += 1
 
+        label_number_part = file_address[file_address.index('_') + 1:file_address.index('.')]
+        label_number_text = label_number_part[label_number_part.index('_') + 1:]
+        label_file = os.path.join(labels_base_address, action, 'labels', label_number_text + '_actions_39.pkl')
+        with open(label_file, 'rb') as f:
+            data = pickle.load(f, encoding='latin1')
+            labels_of_sample = np.where(data == 1)
+
+        guessed_label = np.argmax(outputs)
+        guess_table[guessed_label] += 1
+
+        num_correct_labels = 0
+        for label in labels_of_sample[0]:
+            if network_labels_real_labels_mapping[guessed_label] == label:
+                correct += 1
+                num_correct_labels += 1
+
+        if num_correct_labels > 1:
+            print('action: {}'.format(file_address))
+
+        # if guessed_label == label:
+        #     correct += 1
+        total += 1
     print('accuracy:')
     print(float(correct) / float(total))
+    print('guess table:')
+    print(guess_table)

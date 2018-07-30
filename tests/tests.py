@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from dataset import Alphabet, Character, get_all_characters_images_and_labels
+from datasets.dataset import Alphabet, Character, get_all_characters_images_and_labels
 from settings import DATASET_ADDRESS
 from utils import load_image
 

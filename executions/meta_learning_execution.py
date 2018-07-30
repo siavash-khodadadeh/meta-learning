@@ -5,7 +5,8 @@ import tensorflow as tf
 
 
 from datasets.tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, \
-    create_data_feed_for_train, create_diva_data_feed_for_k_sample_per_action_iterative_dataset
+    create_data_feed_for_train, create_diva_data_feed_for_k_sample_per_action_iterative_dataset, \
+    create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch
 from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
@@ -13,7 +14,7 @@ import settings
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
 N = 5  # Train an N-way classifier.
-K = 1  # Train a K-shot learner
+K = 40  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
@@ -22,8 +23,8 @@ BATCH_SIZE = 5  # The batch size.
 META_LEARNING_RATE = 0.00001
 LEARNING_RATE = 0.001
 
-NUM_META_TEST_ITERATIONS = 6
-REPORT_AFTER_META_TEST_STEP = 1
+NUM_META_TEST_ITERATIONS = 101
+SAVE_AFTER_META_TEST_STEP = 30
 
 NUM_GPUS = 1  # Number of GPUs to use for training.
 RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a random seed.
@@ -88,7 +89,7 @@ def initialize():
         base_address = '/home/siavash/ucf101_tfrecords/'
         # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
     elif DATASET == 'diva':
-        base_address = '/home/siavash/DIVA-TF-RECORDS/validation/'
+        base_address = '/home/siavash/DIVA-TF-RECORDS/train/'
     else:
         base_address = '/home/siavash/kinetics_tfrecords/'
 
@@ -113,11 +114,16 @@ def initialize():
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
         else:
-            input_data_ph, input_labels_ph, iterator = create_diva_data_feed_for_k_sample_per_action_iterative_dataset(
-                dataset_address=base_address,
-                k=K,
-                batch_size=BATCH_SIZE * NUM_GPUS,
-            )
+            # input_data_ph, input_labels_ph, iterator = create_diva_data_feed_for_k_sample_per_action_iterative_dataset(
+            #     dataset_address=base_address,
+            #     k=K,
+            #     batch_size=BATCH_SIZE * NUM_GPUS,
+            # )
+            input_data_ph, input_labels_ph, iterator = \
+                create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
+                    dataset_address=base_address
+                )
+
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
 
@@ -138,12 +144,12 @@ def initialize():
 
     maml.sess.run(tf.tables_initializer())
     maml.sess.run(iterator.initializer)
-    data_np, labels_np = maml.sess.run((input_data_ph, input_labels_ph))
-    for i in range(N):
-        print(labels_np[i, :])
-        import matplotlib.pyplot as plt
-        plt.imshow(data_np[i, 0, :, :, :])
-        plt.show()
+    # data_np, labels_np = maml.sess.run((input_data_ph, input_labels_ph))
+    # for i in range(N):
+    #     print(labels_np[i, :])
+    #     import matplotlib.pyplot as plt
+    #     plt.imshow(data_np[i, 0, :, :, :])
+    #     plt.show()
 
     return maml
 
@@ -159,4 +165,4 @@ if __name__ == '__main__':
         )
     else:
         maml.load_model(META_TEST_STARTING_MODEL)
-        maml.meta_test(NUM_META_TEST_ITERATIONS, save_model_per_x_iterations=REPORT_AFTER_META_TEST_STEP)
+        maml.meta_test(NUM_META_TEST_ITERATIONS, save_model_per_x_iterations=SAVE_AFTER_META_TEST_STEP)

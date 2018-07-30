@@ -111,8 +111,8 @@ class NeuralNetwork(object):
                 name='dense2'
             )
 
-    def get_last_hidden_layer(self):
-        return self.dense
+    def get_last_meta_layer(self):
+        return self.flatten
 
 
 class C3DNetwork(object):
@@ -461,7 +461,7 @@ class ModelAgnosticMetaLearning(object):
 
     def get_exponential_decay_learning_rate(self, initial_learning_rate):
         global_step = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.1, staircase=True)
+        learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.96, staircase=True)
         return learning_rate
 
     def loss_function(self, labels, logits):
@@ -509,10 +509,13 @@ class ModelAgnosticMetaLearning(object):
             if it % save_after_x_step == 0:
                 self.save_model(path=self.saving_path, step=it)
 
-    def meta_test(self, num_iterations, save_model_per_x_iterations=20):
+    def meta_test(self, num_iterations, feed_data=None, save_model_per_x_iterations=20):
         for it in range(num_iterations):
             print(it)
-            _, merged_summary = self.sess.run((self.inner_train_ops, self.merged))
+            if feed_data is None:
+                _, merged_summary = self.sess.run((self.inner_train_ops, self.merged))
+            else:
+                _, merged_summary = self.sess.run((self.inner_train_ops, self.merged), feed_dict=feed_data)
 
             self.file_writer.add_summary(merged_summary, global_step=it)
             if it % save_model_per_x_iterations == 0:
@@ -638,14 +641,14 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
             learn_the_loss_function,
             debug,
             log_device_placement,
-            num_classes=2,
+            num_classes=1,
         )
         self.model_outputs = []
 
     def _compute_inner_gradients(self):
         grads = self.optimizer.compute_gradients(
             self.train_loss,
-            var_list=self.model_variables[-2:],
+            var_list=self.model_variables[-4:],
             colocate_gradients_with_ops=True
         )
         self.inner_grads.append(grads)
@@ -663,32 +666,41 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
 
     def learn_new_concept(self, instances, labels, iterations=1):
         layer_number = len(self.model_outputs)
-        last_hidden_layer = self.model.get_last_hidden_layer()
-        self.model_outputs.append(
-            tf.layers.dense(
-                last_hidden_layer,
-                activation=None,
-                units=2,
-                name='dense__{}'.format(layer_number)
-            )
+        last_meta_layer = self.model.get_last_meta_layer()
+
+        with tf.variable_scope('learned_layer_{}'.format(layer_number)):
+            dense1 = tf.layers.dense(last_meta_layer, units=50, activation=tf.nn.relu, name='dense_1')
+            dense2 = tf.layers.dense(dense1, 1, activation=tf.nn.relu, name='dense_2')
+
+        self.model_outputs.append(dense2)
+
+        layer_variables = tf.get_collection(
+            tf.GraphKeys.GLOBAL_VARIABLES, scope='learned_layer_{}'.format(layer_number)
         )
-        layer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='dense__{}'.format(layer_number))
         loss = self.loss_function(self.input_labels, self.model_outputs[-1])
-        assign_op1 = tf.assign(layer_variables[0], self.model_variables[-2])
-        assign_op2 = tf.assign(layer_variables[1], self.model_variables[-1])
+
+        assign_op1 = tf.assign(layer_variables[0], self.model_variables[-4])
+        assign_op2 = tf.assign(layer_variables[1], self.model_variables[-3])
+        assign_op3 = tf.assign(layer_variables[2], self.model_variables[-2])
+        assign_op4 = tf.assign(layer_variables[3], self.model_variables[-1])
         op = self.optimizer.minimize(loss, var_list=layer_variables, colocate_gradients_with_ops=True)
 
         self._initialize_uninitialized()
-        self.sess.run((assign_op1, assign_op2))
-        for _ in range(iterations):
-            self.sess.run(op, feed_dict={
+        self.sess.run((assign_op1, assign_op2, assign_op3, assign_op4))
+        for it in range(iterations):
+            _, merged_summary = self.sess.run((op, self.merged), feed_dict={
                 self.input_data: instances,
                 self.input_labels: labels
             })
+            self.file_writer.add_summary(merged_summary, global_step=it + 1)
 
-    def evaluate(self, input_data=None):
+    def evaluate_progressive(self, input_data=None):
         assert input_data is not None
-        return self.sess.run(self.model_outputs, feed_dict={self.input_data: input_data})
+        outputs, merged_summary = self.sess.run((self.model_outputs, self.merged), feed_dict={
+            self.input_data: input_data
+        })
+        self.file_writer.add_summary(merged_summary, global_step=0)
+        return outputs
 
     def _initialize_uninitialized(self):
         global_vars = tf.global_variables()
@@ -698,3 +710,6 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
         print([str(i.name) for i in not_initialized_vars])  # only for testing
         if len(not_initialized_vars):
             self.sess.run(tf.variables_initializer(not_initialized_vars))
+
+    def loss_function(self, labels, logits):
+        return tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=logits))

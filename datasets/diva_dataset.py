@@ -42,8 +42,10 @@ def create_tf_records_from_diva_h5_format(dataset_address, tf_record_address):
         base_tf_address = os.path.join(tf_record_address, dataset_type)
         for action_name in os.listdir(base_address):
             for sample_name in os.listdir(os.path.join(base_address, action_name)):
+                if sample_name == 'labels':
+                    continue
                 sample_address = os.path.join(base_address, action_name, sample_name)
-                clip_address = os.path.join(sample_address, os.listdir(sample_address)[0])
+                clip_address = sample_address
                 clip = read_h5_file(clip_address)
                 DataSetUtils.check_tf_directory(base_tf_address, action_name)
                 DataSetUtils.write_tf_record(base_tf_address, clip, sample_name, action_name)

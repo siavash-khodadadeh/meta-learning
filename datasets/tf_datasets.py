@@ -45,7 +45,7 @@ def extract_video(parsed_example, dataset_name='ucf-101'):
     return clip
 
 
-def prepare_classes_list_and_table(dataset_address, actions_include, actions_exclude):
+def prepare_classes_list_and_table(dataset_address, actions_include=None, actions_exclude=None):
     classes_list = sorted(os.listdir(dataset_address))
     should_be_removed_actions = []
 
@@ -227,5 +227,56 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
         input_data_ph = tf.cast(next_batch[0], tf.float32)
         input_labels_ph = next_batch[1]
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=batch_size)
+
+    return input_data_ph, input_labels_ph, iterator
+
+
+def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
+        dataset_address
+):
+    classes_list, table = prepare_classes_list_and_table(dataset_address)
+    if 'kinetics' in dataset_address:
+        dataset_name = 'kinetics'
+    elif 'DIVA' in dataset_address:
+        dataset_name = 'diva'
+    else:
+        dataset_name = 'ucf-101'
+
+    def _parse_example(example):
+        parsed_example = parse_example(example)
+        feature = extract_video(parsed_example, dataset_name)
+
+        example_address = parsed_example['task']
+        label = tf.string_split([example_address], '/')
+        label = label.values[0]
+        label = table.lookup(label)
+        label = tf.one_hot(label, depth=len(classes_list))
+
+        return feature, label
+
+    directories = os.listdir(dataset_address)
+    directories = [os.path.join(dataset_address, directory) + '/*' for directory in directories]
+    directories = tf.data.Dataset.from_tensor_slices(directories)
+    directories = directories.apply(tf.contrib.data.enumerate_dataset())
+
+    # Define a function that maps each (class, directory) pair to the (shuffled)
+    # records in those files.
+    def per_directory_dataset(class_label, directory_glob):
+        records = tf.data.Dataset.list_files(directory_glob, shuffle=True)
+        records = tf.data.TFRecordDataset(records)
+        records = records.map(_parse_example)
+        return records
+
+    # NOTE: The `cycle_length` and `block_length` here aren't strictly necessary,
+    # because the batch size is exactly `number of classes * images per class`.
+    # However, these arguments may be useful if you want to decouple these numbers.
+    merged_records = directories.interleave(per_directory_dataset, cycle_length=200, block_length=1)
+    merged_records = merged_records.batch(5)
+    iterator = merged_records.make_initializable_iterator()
+    next_batch = iterator.get_next()
+    with tf.variable_scope('train_data'):
+        input_data_ph = tf.cast(next_batch[0], tf.float32)
+        input_labels_ph = next_batch[1]
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=5)
 
     return input_data_ph, input_labels_ph, iterator

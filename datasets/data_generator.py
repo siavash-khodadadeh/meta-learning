@@ -62,9 +62,12 @@ class DataGenerator(object):
             )
             # make sure the above isn't randomized order
             labels = [li[0] for li in labels_and_images]
-            if binary_classification:
-                labels = [1 if labels[i] == 3 else 0 for i in range(len(labels))]
             filenames = [li[1] for li in labels_and_images]
+
+            if binary_classification:
+                labels = [1 if labels[i] == 1 else 0 for i in range(len(labels))]
+
+
             all_filenames.extend(filenames)
 
         # make queue for tensorflow to read from
@@ -122,7 +125,8 @@ class DataGenerator(object):
         all_image_batches = tf.stack(all_image_batches)
         all_label_batches = tf.stack(all_label_batches)
         if binary_classification:
-            all_label_batches = tf.one_hot(all_label_batches, 2)
+            # all_label_batches = tf.one_hot(all_label_batches, 2)
+            all_label_batches = tf.cast(all_label_batches, tf.float32)
         else:
             all_label_batches = tf.one_hot(all_label_batches, self.num_classes)
         return all_image_batches, all_label_batches
