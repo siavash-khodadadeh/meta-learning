@@ -320,11 +320,9 @@ class ModelAgnosticMetaLearning(object):
             input_validation_labels_ph,
             log_dir,
             saving_path,
-            neural_loss_learning_rate=0.001,
             meta_learn_rate=0.00001,
             learning_rate=0.0001,
             num_gpu_devices=None,
-            learn_the_loss_function=False,
             debug=False,
             log_device_placement=True,
             num_classes=None,
@@ -337,9 +335,6 @@ class ModelAgnosticMetaLearning(object):
         self.num_classes = num_classes
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
-        if learn_the_loss_function:
-            self.neural_loss_optimizer = tf.train.AdamOptimizer(learning_rate=neural_loss_learning_rate)
-        self.learn_the_loss_function = learn_the_loss_function
 
         self.input_data = input_data_ph
         self.input_labels = input_labels_ph
@@ -355,9 +350,6 @@ class ModelAgnosticMetaLearning(object):
         self.tower_meta_losses = []
         self.tower_meta_grads = []
 
-        if learn_the_loss_function:
-            self.tower_neural_gradients = []
-
         # Split data such that each part runs on a different GPU
         data_splits = self._split_data_between_devices()
         input_data_splits = data_splits[0]
@@ -365,65 +357,49 @@ class ModelAgnosticMetaLearning(object):
         input_validation_splits = data_splits[2]
         input_validation_labels_splits = data_splits[3]
 
-        # Define the model on one of the devices.
-        with tf.device('/gpu:0'):
-            with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-                self._create_model(input_data_splits[0])
-                self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
-
-        for device_idx, (device_name, input_data, input_labels) in enumerate(
+        for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
                 self.devices,
                 input_data_splits,
                 input_labels_splits,
-            )
-        ):
-            with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
-                with tf.device(device_name):
-                    self._create_inner_model_part(input_data, input_labels)
-
-        with tf.variable_scope('average_inner_loss'):
-            with tf.device('/gpu:0'):
-                tf.summary.scalar(
-                    'Inner Loss Average:',
-                    tf.add_n(self.inner_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
-                )
-
-        with tf.variable_scope('average_inner_gradients'):
-            with tf.device('/gpu:0'):
-                averaged_inner_gradients = average_gradients(self.inner_grads)
-
-            with tf.device('/gpu:0'):
-                updated_vars = self._compute_updated_vars(averaged_inner_gradients)
-
-        for device_idx, (device_name, input_validation, input_validation_labels) in enumerate(
-            zip(
-                self.devices,
                 input_validation_splits,
                 input_validation_labels_splits
             )
         ):
-
             with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
                 with tf.device(device_name):
-                    self._create_meta_part(input_validation, input_validation_labels, updated_vars)
+                    grads, inner_loss = self._create_inner_model_part(input_data, input_labels)
+                    self.inner_losses.append(inner_loss)
+                    self.inner_grads.append(grads)
+
+                    updated_vars = self._compute_updated_vars_and_inner_train_op(grads)
+
+                    meta_loss, meta_grads = self._create_meta_part(
+                        input_validation,
+                        input_validation_labels,
+                        updated_vars
+                    )
+                    self.tower_meta_losses.append(meta_loss)
+                    self.tower_meta_grads.append(meta_grads)
+
+        with tf.variable_scope('average_gradients'):
+            with tf.device('/cpu:0'):
+                averaged_grads = average_gradients(self.tower_meta_grads)
+                self.train_op = self.meta_optimizer.apply_gradients(averaged_grads)
 
         with tf.variable_scope('average_meta_loss'):
-            with tf.device('/gpu:0'):
+            with tf.device('/cpu:0'):
                 tf.summary.scalar(
                     'Meta Loss Average:',
                     tf.add_n(self.tower_meta_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
                 )
 
-        with tf.variable_scope('average_gradients'):
-            with tf.device('/gpu:0'):
-                averaged_grads = average_gradients(self.tower_meta_grads)
-
-                self.train_op = self.meta_optimizer.apply_gradients(averaged_grads)
-
-            if learn_the_loss_function:
-                averaged_neural_grads = average_gradients(self.tower_neural_gradients)
-                self.loss_func_op = self.neural_loss_optimizer.apply_gradients(averaged_neural_grads)
+        with tf.variable_scope('average_inner_loss'):
+            with tf.device('/cpu:0'):
+                tf.summary.scalar(
+                    'Inner Loss Average:',
+                    tf.add_n(self.inner_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
+                )
 
         self.log_dir = self._create_log_dir(log_dir)
         self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
@@ -440,7 +416,7 @@ class ModelAgnosticMetaLearning(object):
 
         self.sess.run(tf.global_variables_initializer())
 
-    def _compute_updated_vars(self, averaged_inner_gradients):
+    def _compute_updated_vars_and_inner_train_op(self, averaged_inner_gradients):
         updated_vars = {}
         for grad_info in averaged_inner_gradients:
             if grad_info[0] is not None:
@@ -452,12 +428,8 @@ class ModelAgnosticMetaLearning(object):
         return updated_vars
 
     def _get_gpu_devices(self, num_gpu_devices):
-        if num_gpu_devices is None:
-            devices = ['/gpu:0', ]
-        else:
-            devices = ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices + 1)]
-            devices = devices[1:]
-        return devices
+        return ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices)]
+
 
     def get_exponential_decay_learning_rate(self, initial_learning_rate):
         global_step = tf.Variable(0, trainable=False)
@@ -555,25 +527,22 @@ class ModelAgnosticMetaLearning(object):
             self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
 
         with tf.variable_scope('loss'):
-            if self.learn_the_loss_function:
-                self.train_loss = self.neural_loss_function(input_labels, model_out_train)
-                self.neural_loss_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='loss')
-            else:
-                self.train_loss = self.loss_function(input_labels, model_out_train)
+            train_loss = self.loss_function(input_labels, model_out_train)
 
-            self.inner_losses.append(self.train_loss)
-            tf.summary.scalar('train_loss', self.train_loss)
+            tf.summary.scalar('train_loss', train_loss)
 
         with tf.variable_scope('gradients'):
-            self._compute_inner_gradients()
+            grads = self._compute_inner_gradients(train_loss)
 
-    def _compute_inner_gradients(self):
+        return grads, train_loss
+
+    def _compute_inner_gradients(self, train_loss):
         grads = self.optimizer.compute_gradients(
-            self.train_loss,
+            train_loss,
             var_list=self.model_variables,
             colocate_gradients_with_ops=True
         )
-        self.inner_grads.append(grads)
+        return grads
 
     def _create_meta_part(self, input_validation, input_validation_labels, updated_vars):
         with tf.variable_scope('updated_model', reuse=tf.AUTO_REUSE):
@@ -583,7 +552,6 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('meta_loss'):
             meta_loss = self.loss_function(input_validation_labels, model_out_validation)
             tf.summary.scalar('meta_loss', meta_loss)
-            self.tower_meta_losses.append(meta_loss)
 
         with tf.variable_scope('meta_optimizer'):
             gradients = self.meta_optimizer.compute_gradients(
@@ -592,13 +560,7 @@ class ModelAgnosticMetaLearning(object):
                 colocate_gradients_with_ops=True
             )
 
-            self.tower_meta_grads.append(gradients)
-
-            if self.learn_the_loss_function:
-                loss_gradients = self.neural_loss_optimizer.compute_gradients(
-                    meta_loss, var_list=self.neural_loss_vars
-                )
-                self.tower_neural_gradients.append(loss_gradients)
+        return meta_loss, gradients
 
     def _create_log_dir(self, log_dir):
         if os.path.exists(log_dir):
@@ -653,7 +615,7 @@ class ProgressiveModelAgnosticMetaLearning(ModelAgnosticMetaLearning):
         )
         self.inner_grads.append(grads)
 
-    def _compute_updated_vars(self, averaged_inner_gradients):
+    def _compute_updated_vars_and_inner_train_op(self, averaged_inner_gradients):
         updated_vars = {var.name[6:]: var for var in self.model_variables}
         for grad_info in averaged_inner_gradients:
             if grad_info[0] is not None:
