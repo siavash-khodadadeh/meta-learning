@@ -23,8 +23,14 @@ def resize_to(video, width=112, height=112):
     return resized_video_frames
 
 
+def convert_from_bgr_to_rgb(video):
+    video = video[..., ::-1]
+    return video
+
+
 def pre_process(video):
     video = convert_to_5_fps(video)
+    video = convert_from_bgr_to_rgb(video)
     video = resize_to(video)
     return video
 

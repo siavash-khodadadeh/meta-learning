@@ -64,7 +64,7 @@ maml = ModelAgnosticMetaLearning(
 )
 
 
-maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-60')
+maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-90')
 
 
 def extract_video(example):

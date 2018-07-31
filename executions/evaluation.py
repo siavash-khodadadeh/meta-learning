@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 
 from models import ModelAgnosticMetaLearning, C3DNetwork
-from ucf101_data_generator import TraditionalDataset
+from datasets.ucf101_data_generator import TraditionalDataset
 
 LOG_DIR = 'logs/ucf101_transfer_learning/'
 BASE_ADDRESS = '/home/siavash/UCF-101/'
@@ -14,8 +14,10 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
 # SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
-# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-1'
-SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/model/-1'
+SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-90'
+# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/model/-30'
+# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/crcv/model/-30'
+
 
 # TEST_ACTIONS = {
 #     'Surfing': 72,
@@ -103,19 +105,56 @@ SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/ne
 #     'Billiards': 19,
 # }
 
-
+#
+# TEST_ACTIONS = {
+#     'PlayingSitar': 5,
+#     'MoppingFloor': 4,
+#     'FrontCrawl': 3,
+#     'Surfing': 9,
+#     'Bowling': 0,
+#     'SoccerPenalty': 7,
+#     'SumoWrestling': 8,
+#     'Shotput': 6,
+#     'CleanAndJerk': 1,
+#     'FloorGymnastics': 2,
+# }
+# TEST_ACTIONS = {
+#     'TrampolineJumping': 25,
+#     'ThrowDiscus': 24,
+#     'TableTennisShot': 23,
+#     'Swing': 22,
+#     'HorseRace': 9,
+#     'Drumming': 7,
+#     'StillRings': 21,
+#     'Bowling': 5,
+#     'ApplyEyeMakeup': 0,
+#     'SkateBoarding': 20,
+#     'VolleyballSpiking': 26,
+#     'CliffDiving': 6,
+#     'BaseballPitch': 1,
+#     'PommelHorse': 16,
+#     'FloorGymnastics': 8,
+#     'BlowingCandles': 4,
+#     'PizzaTossing': 13,
+#     'BasketballDunk': 3,
+#     'Basketball': 2,
+#     'JugglingBalls': 10,
+#     'Kayaking': 11,
+#     'Lunges': 12,
+#     'PlayingCello': 14,
+#     'PlayingSitar': 15,
+#     'Punch': 17,
+#     'RockClimbingIndoor': 18,
+#     'ShavingBeard': 19,
+# }
 TEST_ACTIONS = {
-    'PlayingSitar': 5,
-    'MoppingFloor': 4,
-    'FrontCrawl': 3,
-    'Surfing': 9,
-    'Bowling': 0,
-    'SoccerPenalty': 7,
-    'SumoWrestling': 8,
-    'Shotput': 6,
-    'CleanAndJerk': 1,
-    'FloorGymnastics': 2,
+    'StillRings': 4,
+    'SoccerPenalty': 3,
+    'SoccerJuggling': 2,
+    'SkyDiving': 1,
+    'Skijet': 0
 }
+
 
 # ALL UCF 101
 # TEST_ACTIONS_LIST = sorted(os.listdir(BASE_ADDRESS))
@@ -145,18 +184,22 @@ def evaluate():
         input_labels_ph,
         val_data_ph,
         val_labels_ph,
+        num_gpu_devices=1,
         log_dir=LOG_DIR,
         learning_rate=0.001,
         log_device_placement=False,
         saving_path=None,
-        num_classes=10,
+        num_classes=len(TEST_ACTIONS),
     )
 
     maml.load_model(path=SAVED_MODEL_ADDRESS)
 
     correct = 0
     count = 0
-    for action in TEST_ACTIONS.keys():
+
+    class_labels_couners = []
+
+    for action in sorted(TEST_ACTIONS.keys()):
         class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
         for file_address in os.listdir(BASE_ADDRESS + action):
@@ -170,13 +213,6 @@ def evaluate():
                 maml.input_data: video,
             })
 
-            #  If doing Yogesh's suggestion
-            # ind = np.argmax(
-            #     (outputs[0][0, 72], outputs[0][0, 79], outputs[0][0, 39], outputs[0][0, 24], outputs[0][0, 6])
-            # )
-            # label = [72, 79, 39, 24, 6][ind]
-
-            #  Otherwise
             label = np.argmax(outputs, 2)
 
             if label == TEST_ACTIONS[action]:
@@ -187,11 +223,26 @@ def evaluate():
 
         print(class_label_counter)
         print(np.argmax(class_label_counter))
+        class_labels_couners.append(class_label_counter)
 
     print('Accuracy: ')
     print(float(correct) / count)
     print(count)
     print(correct)
+
+    confusion_matrix = np.array(class_labels_couners, dtype=np.float32).transpose()
+    columns_sum = np.sum(confusion_matrix, axis=0)
+    rows_sum = np.sum(confusion_matrix, axis=1)
+
+    counter = 0
+    for action in sorted(TEST_ACTIONS.keys()):
+        print(action)
+        recall = confusion_matrix[counter][counter] / rows_sum[counter]
+        precision = confusion_matrix[counter][counter] / columns_sum[counter]
+        f1_score = 2 * precision * recall / (precision + recall)
+        print('F1 Score: ')
+        print(f1_score)
+        counter += 1
 
 
 if __name__ == '__main__':
