@@ -106,7 +106,7 @@ def extract_video(example):
 for action, label in action_labels.items():
     correct = 0
     total = 0
-    guess_table = [0] * 5
+    guess_table = [0] * len(action_labels)
     print(action)
     for file_address in os.listdir(os.path.join(base_address, action)):
         tf_record_address = os.path.join(base_address, action, file_address)
