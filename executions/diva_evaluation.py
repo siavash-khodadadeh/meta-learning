@@ -104,12 +104,15 @@ def extract_video(example):
     return clip
 
 
-for action, label in action_labels.items():
+class_labels_counters = []
+
+for action in sorted(action_labels.keys()):
     correct = 0
     total = 0
     guess_table = [0] * len(action_labels)
     print(action)
-    for file_address in os.listdir(os.path.join(base_address, action)):
+    sys.stdout.flush()
+    for file_address in os.listdir(os.path.join(base_address, action))[:200]:
         tf_record_address = os.path.join(base_address, action, file_address)
         dataset = tf.data.TFRecordDataset([tf_record_address])
         dataset = dataset.map(extract_video)
@@ -120,22 +123,33 @@ for action, label in action_labels.items():
             input_data_ph: video_np
         })
 
-        # label_number_part = file_address[file_address.index('_') + 1:file_address.index('.')]
-        # label_number_text = label_number_part[label_number_part.index('_') + 1:]
-        # label_file = os.path.join(labels_base_address, action, 'labels', label_number_text + '_actions_39.pkl')
-        # with open(label_file, 'rb') as f:
-        #     data = pickle.load(f, encoding='latin1')
-        #     labels_of_sample = np.where(data == 1)
-
         guessed_label = np.argmax(outputs)
         guess_table[guessed_label] += 1
-        if guessed_label == label:
+        if guessed_label == action_labels[action]:
             correct += 1
 
         total += 1
+
+    class_labels_counters.append(guess_table)
     print('accuracy:')
     print(float(correct) / float(total))
     print('guess table:')
     print(guess_table)
 
+    sys.stdout.flush()
+
+
+confusion_matrix = np.array(class_labels_counters, dtype=np.float32).transpose()
+columns_sum = np.sum(confusion_matrix, axis=0)
+rows_sum = np.sum(confusion_matrix, axis=1)
+
+counter = 0
+for action in sorted(action_labels.keys()):
+    print(action)
+    recall = confusion_matrix[counter][counter] / rows_sum[counter]
+    precision = confusion_matrix[counter][counter] / columns_sum[counter]
+    f1_score = 2 * precision * recall / (precision + recall)
+    print('F1 Score: ')
+    print(f1_score)
+    counter += 1
     sys.stdout.flush()
