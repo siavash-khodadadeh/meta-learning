@@ -119,12 +119,12 @@ for action, label in action_labels.items():
             input_data_ph: video_np
         })
 
-        label_number_part = file_address[file_address.index('_') + 1:file_address.index('.')]
-        label_number_text = label_number_part[label_number_part.index('_') + 1:]
-        label_file = os.path.join(labels_base_address, action, 'labels', label_number_text + '_actions_39.pkl')
-        with open(label_file, 'rb') as f:
-            data = pickle.load(f, encoding='latin1')
-            labels_of_sample = np.where(data == 1)
+        # label_number_part = file_address[file_address.index('_') + 1:file_address.index('.')]
+        # label_number_text = label_number_part[label_number_part.index('_') + 1:]
+        # label_file = os.path.join(labels_base_address, action, 'labels', label_number_text + '_actions_39.pkl')
+        # with open(label_file, 'rb') as f:
+        #     data = pickle.load(f, encoding='latin1')
+        #     labels_of_sample = np.where(data == 1)
 
         guessed_label = np.argmax(outputs)
         guess_table[guessed_label] += 1
