@@ -274,7 +274,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
     # NOTE: The `cycle_length` and `block_length` here aren't strictly necessary,
     # because the batch size is exactly `number of classes * images per class`.
     # However, these arguments may be useful if you want to decouple these numbers.
-    merged_records = directories.interleave(per_directory_dataset, cycle_length=200, block_length=1)
+    merged_records = directories.interleave(per_directory_dataset, cycle_length=len(classes_list), block_length=1)
     merged_records = merged_records.batch(len(classes_list))
     iterator = merged_records.make_initializable_iterator()
     next_batch = iterator.get_next()
