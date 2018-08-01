@@ -11,15 +11,15 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
-N = 2  # Train an N-way classifier.
+META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
+DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
+N = 20  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
-NUM_ITERATIONS = 1000
+NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 20
-SAVE_AFTER_STEP = 200
-BATCH_SIZE = 2  # The batch size.
+SAVE_AFTER_STEP = 500
+BATCH_SIZE = 20  # The batch size.
 META_LEARNING_RATE = 0.000001
 LEARNING_RATE = 0.001
 
