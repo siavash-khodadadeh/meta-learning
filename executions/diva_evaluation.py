@@ -1,5 +1,6 @@
 import os
 import pickle
+import sys
 
 import tensorflow as tf
 import numpy as np
@@ -136,3 +137,5 @@ for action, label in action_labels.items():
     print(float(correct) / float(total))
     print('guess table:')
     print(guess_table)
+
+    sys.stdout.flush()
