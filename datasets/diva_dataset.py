@@ -7,6 +7,73 @@ import h5py
 
 from datasets.ucf101_data_generator import DataSetUtils
 
+REAL_CLASS_LABELS = {
+    0: "Riding",
+    1: "activity_standing",
+    2: "vehicle_turning_right",
+    3: "activity_walking",
+    4: "vehicle_starting",
+    5: "specialized_texting_phone",
+    6: "vehicle_moving",
+    7: "vehicle_stopping",
+    8: "activity_carrying",
+    9: "activity_gesturing",
+    10: "Unloading",
+    11: "Transport_HeavyCarry",
+    12: "specialized_talking_phone",
+    13: "Exiting",
+    14: "Closing",
+    15: "Misc",
+    16: "vehicle_turning_left",
+    17: "specialized_miscellaneous",
+    18: "Interacts",
+    19: "Entering",
+    20: "Opening",
+    21: "activity_running",
+    22: "Open_Trunk",
+    23: "Closing_Trunk",
+    24: "vehicle_u_turn",
+    25: "Person_Person_Interaction",
+    26: "Loading",
+    27: "Pull",
+    28: "PickUp",
+    29: "SetDown",
+    30: "activity_sitting",
+    31: "activity_crouching",
+    32: "Talking",
+    33: "PickUp_Person_Vehicle",
+    34: "DropOff_Person_Vehicle",
+    35: "Object_Transfer",
+    36: "Drop",
+    37: "specialized_using_tool",
+    38: "Push",
+    39: "specialized_throwing",
+}
+
+
+INTERESTING_CLASS_LABELS = {
+    'specialized_texting_phone': 16,
+    'specialized_talking_phone': 15,
+    'Unloading': 12,
+    'Transport_HeavyCarry': 11,
+    'Talking': 10,
+    'activity_carrying': 13,
+    'Closing': 0,
+    'vehicle_u_turn': 19,
+    'Closing_Trunk': 1,
+    'vehicle_turning_right': 18,
+    'Entering': 2,
+    'Exiting': 3,
+    'Open_Trunk': 6,
+    'activity_sitting': 14,
+    'Interacts': 4,
+    'vehicle_turning_left': 17,
+    'Loading': 5,
+    'Pull': 8,
+    'Opening': 7,
+    'Riding': 9,
+}
+
 
 DIVA_DATASET_ADDRESS = '/home/siavash/DIVA-FewShot/'
 DIVA_TFRECORD_DATASET_ADDRESS = '/home/siavash/DIVA-TF-RECORDS/'
@@ -55,8 +122,15 @@ def extract_labels(labels_base_address, sample_name):
     with open(label_file, 'rb') as f:
         labels_of_sample = pickle.load(f, encoding='latin1')
 
-    labels_of_sample = labels_of_sample.astype(np.uint8)
-    return labels_of_sample
+    final_labels = [0] * 20
+    indices = np.where(labels_of_sample == 1)[0]
+    for index in indices:
+        real_class_name = REAL_CLASS_LABELS[index]
+        if real_class_name in INTERESTING_CLASS_LABELS.keys():
+            final_labels[INTERESTING_CLASS_LABELS[real_class_name]] = 1
+
+    final_labels = np.array(final_labels, dtype=np.uint8)
+    return final_labels
 
 
 def create_tf_records_from_diva_h5_format(dataset_address, tf_record_address):
