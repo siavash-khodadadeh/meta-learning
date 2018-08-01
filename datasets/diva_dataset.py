@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import numpy as np
 import cv2
@@ -44,11 +45,26 @@ def read_h5_file(file_address):
     return video
 
 
+def extract_labels(labels_base_address, sample_name):
+    label_number_part = sample_name[sample_name.index('_') + 1:sample_name.index('.')]
+    label_number_text = label_number_part[label_number_part.index('_') + 1:]
+    label_file = os.path.join(
+        labels_base_address,
+        label_number_text + '_actions_39.pkl'
+    )
+    with open(label_file, 'rb') as f:
+        labels_of_sample = pickle.load(f, encoding='latin1')
+
+    labels_of_sample = labels_of_sample.astype(np.uint8)
+    return labels_of_sample
+
+
 def create_tf_records_from_diva_h5_format(dataset_address, tf_record_address):
     for dataset_type in ('train', 'validation'):
         base_address = os.path.join(dataset_address, dataset_type)
         base_tf_address = os.path.join(tf_record_address, dataset_type)
         for action_name in os.listdir(base_address):
+            labels_base_address = os.path.join(base_address, action_name, 'labels')
             for sample_name in os.listdir(os.path.join(base_address, action_name)):
                 if sample_name == 'labels':
                     continue
@@ -57,7 +73,15 @@ def create_tf_records_from_diva_h5_format(dataset_address, tf_record_address):
                 clip = read_h5_file(clip_address)
                 if clip is not None:
                     DataSetUtils.check_tf_directory(base_tf_address, action_name)
-                    DataSetUtils.write_tf_record(base_tf_address, clip, sample_name, action_name)
+                    labels_of_sample = extract_labels(labels_base_address, sample_name)
+
+                    DataSetUtils.write_tf_record(
+                        base_tf_address,
+                        clip,
+                        sample_name,
+                        action_name,
+                        labels=labels_of_sample
+                    )
 
 
 if __name__ == '__main__':

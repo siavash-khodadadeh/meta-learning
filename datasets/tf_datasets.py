@@ -8,6 +8,7 @@ def parse_example(example_proto):
         'task': tf.FixedLenFeature([], tf.string),
         'len': tf.FixedLenFeature([], tf.int64),
         'video': tf.FixedLenFeature([], tf.string),
+        'labels': tf.FixedLenFeature([], tf.string),
     }
     parsed_example = tf.parse_single_example(example_proto, features)
     return parsed_example
@@ -253,6 +254,8 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         label = table.lookup(label)
         label = tf.one_hot(label, depth=len(classes_list))
 
+        # labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
+
         return feature, label
 
     directories = os.listdir(dataset_address)
@@ -272,7 +275,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
     # because the batch size is exactly `number of classes * images per class`.
     # However, these arguments may be useful if you want to decouple these numbers.
     merged_records = directories.interleave(per_directory_dataset, cycle_length=200, block_length=1)
-    merged_records = merged_records.batch(2)
+    merged_records = merged_records.batch(5)
     iterator = merged_records.make_initializable_iterator()
     next_batch = iterator.get_next()
     with tf.variable_scope('train_data'):

@@ -232,7 +232,7 @@ class DataSetUtils(object):
             os.mkdir(directory)
 
     @staticmethod
-    def write_tf_record(tf_record_base_address, video_frames, sample_name, action):
+    def write_tf_record(tf_record_base_address, video_frames, sample_name, action, labels=None):
         print(sample_name)
         tf_file_address = os.path.join(tf_record_base_address, action, sample_name) + '.tfrecord'
         if os.path.exists(tf_file_address):
@@ -242,7 +242,8 @@ class DataSetUtils(object):
         feature = {
             'task': _bytes_feature(tf.compat.as_bytes(action)),
             'len': _int64_feature(video_frames.shape[0]),
-            'video': _bytes_feature(tf.compat.as_bytes(video_frames.tostring()))
+            'video': _bytes_feature(tf.compat.as_bytes(video_frames.tostring())),
+            'labels': _bytes_feature(tf.compat.as_bytes(labels.tostring())),
         }
         example = tf.train.Example(features=tf.train.Features(feature=feature))
         writer.write(example.SerializeToString())
