@@ -11,8 +11,8 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
+META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
+DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
 N = 20  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
@@ -31,11 +31,11 @@ RANDOM_SEED = 100  # Random seed value. Set it to -1 in order not to use a rando
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 
 
-# META_TEST_MODEL = 'kinetics/meta-train/27-way-classifier/1-shot/batch-size-9/num-gpus-3/random-seed-100/' \
-#                   'num-iterations-1000/meta-learning-rate-0.0001/learning-rate-0.001/-1000'
+META_TEST_MODEL = 'kinetics/meta-train/20-way-classifier/1-shot/batch-size-20/num-gpus-1/random-seed-100/' \
+                  'num-iterations-10000/meta-learning-rate-1e-06/learning-rate-0.001/-2000'
 
-META_TEST_MODEL = 'ucf-101/meta-train/2-way-classifier/1-shot/batch-size-2/num-gpus-1/random-seed-100/' \
-                  'num-iterations-1000/meta-learning-rate-1e-06/learning-rate-0.001/-400'
+# META_TEST_MODEL = 'ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/' \
+#                   'num-iterations-1000/meta-learning-rate-1e-05/learning-rate-0.001/-1000'
 
 # META_TEST_MODEL = 'backups/kinetics-from-server/logs/-10000'
 META_TEST_STARTING_MODEL = os.path.join(settings.SAVED_MODELS_ADDRESS, META_TEST_MODEL)
