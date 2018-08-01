@@ -257,7 +257,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
 
     directories = os.listdir(dataset_address)
     directories = [os.path.join(dataset_address, directory) + '/*' for directory in directories]
-    directories = tf.data.Dataset.from_tensor_slices(directories)
+    directories = tf.data.Dataset.from_tensor_slices(directories).repeat(-1)
     directories = directories.apply(tf.contrib.data.enumerate_dataset())
 
     # Define a function that maps each (class, directory) pair to the (shuffled)
@@ -272,7 +272,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
     # because the batch size is exactly `number of classes * images per class`.
     # However, these arguments may be useful if you want to decouple these numbers.
     merged_records = directories.interleave(per_directory_dataset, cycle_length=200, block_length=1)
-    merged_records = merged_records.batch(5)
+    merged_records = merged_records.batch(2)
     iterator = merged_records.make_initializable_iterator()
     next_batch = iterator.get_next()
     with tf.variable_scope('train_data'):

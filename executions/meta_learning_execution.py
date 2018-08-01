@@ -13,14 +13,14 @@ import settings
 
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
-N = 5  # Train an N-way classifier.
-K = 30  # Train a K-shot learner
+N = 2  # Train an N-way classifier.
+K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 1000
 REPORT_AFTER_STEP = 20
-SAVE_AFTER_STEP = 500
-BATCH_SIZE = 5  # The batch size.
-META_LEARNING_RATE = 0.00001
+SAVE_AFTER_STEP = 200
+BATCH_SIZE = 2  # The batch size.
+META_LEARNING_RATE = 0.000001
 LEARNING_RATE = 0.001
 
 NUM_META_TEST_ITERATIONS = 101
@@ -34,10 +34,10 @@ STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/spor
 # META_TEST_MODEL = 'kinetics/meta-train/27-way-classifier/1-shot/batch-size-9/num-gpus-3/random-seed-100/' \
 #                   'num-iterations-1000/meta-learning-rate-0.0001/learning-rate-0.001/-1000'
 
-# META_TEST_MODEL = 'ucf-101/meta-train/5-way-classifier/1-shot/batch-size-5/num-gpus-1/random-seed-100/' \
-#                   'num-iterations-1000/meta-learning-rate-1e-05/learning-rate-0.001/-1000'
+META_TEST_MODEL = 'ucf-101/meta-train/2-way-classifier/1-shot/batch-size-2/num-gpus-1/random-seed-100/' \
+                  'num-iterations-1000/meta-learning-rate-1e-06/learning-rate-0.001/-400'
 
-META_TEST_MODEL = 'backups/kinetics-from-server/logs/-10000'
+# META_TEST_MODEL = 'backups/kinetics-from-server/logs/-10000'
 META_TEST_STARTING_MODEL = os.path.join(settings.SAVED_MODELS_ADDRESS, META_TEST_MODEL)
 
 

@@ -32,20 +32,20 @@ network_labels_real_labels_mapping = {
 action_labels = {
     'Closing_Trunk': 0,
     'Open_Trunk': 1,
-    'specialized_talking_phone': 2,
-    'specialized_texting_phone': 3,
-    'vehicle_u_turn': 4,
+    # 'specialized_talking_phone': 2,
+    # 'specialized_texting_phone': 3,
+    # 'vehicle_u_turn': 4,
 }
 
 with tf.variable_scope('train_data'):
     input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-    input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
-    tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=5)
+    input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, len(action_labels)])
+    tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=len(action_labels))
 
 with tf.variable_scope('validation_data'):
     val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-    val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
-    tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=5)
+    val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, len(action_labels)])
+    tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=len(action_labels))
 
 
 maml = ModelAgnosticMetaLearning(
@@ -60,7 +60,7 @@ maml = ModelAgnosticMetaLearning(
     meta_learn_rate=0.00001,
     learning_rate=0.001,
     log_device_placement=False,
-    num_classes=5
+    num_classes=len(action_labels)
 )
 
 
