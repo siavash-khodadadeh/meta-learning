@@ -38,6 +38,8 @@ def pre_process(video):
 def read_h5_file(file_address):
     hf = h5py.File(file_address, 'r')
     video = hf.get('data')
+    if video.shape[0] < 16:
+        return None
     video = pre_process(video)
     return video
 
@@ -53,8 +55,9 @@ def create_tf_records_from_diva_h5_format(dataset_address, tf_record_address):
                 sample_address = os.path.join(base_address, action_name, sample_name)
                 clip_address = sample_address
                 clip = read_h5_file(clip_address)
-                DataSetUtils.check_tf_directory(base_tf_address, action_name)
-                DataSetUtils.write_tf_record(base_tf_address, clip, sample_name, action_name)
+                if clip is not None:
+                    DataSetUtils.check_tf_directory(base_tf_address, action_name)
+                    DataSetUtils.write_tf_record(base_tf_address, clip, sample_name, action_name)
 
 
 if __name__ == '__main__':
