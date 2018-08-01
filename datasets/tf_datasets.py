@@ -281,6 +281,6 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
     with tf.variable_scope('train_data'):
         input_data_ph = tf.cast(next_batch[0], tf.float32)
         input_labels_ph = next_batch[1]
-        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=5)
+        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=len(classes_list))
 
     return input_data_ph, input_labels_ph, iterator, table

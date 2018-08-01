@@ -30,11 +30,26 @@ network_labels_real_labels_mapping = {
 
 
 action_labels = {
-    'Closing_Trunk': 0,
-    'Open_Trunk': 1,
-    # 'specialized_talking_phone': 2,
-    # 'specialized_texting_phone': 3,
-    # 'vehicle_u_turn': 4,
+    'specialized_texting_phone': 16,
+    'specialized_talking_phone': 15,
+    'Unloading': 12,
+    'Transport_HeavyCarry': 11,
+    'Talking': 10,
+    'activity_carrying': 13,
+    'Closing': 0,
+    'vehicle_u_turn': 19,
+    'Closing_Trunk': 1,
+    'vehicle_turning_right': 18,
+    'Entering': 2,
+    'Exiting': 3,
+    'Open_Trunk': 6,
+    'activity_sitting': 14,
+    'Interacts': 4,
+    'vehicle_turning_left': 17,
+    'Loading': 5,
+    'Pull': 8,
+    'Opening': 7,
+    'Riding': 9,
 }
 
 with tf.variable_scope('train_data'):
@@ -88,7 +103,7 @@ def extract_video(example):
     return clip
 
 
-for action, _ in action_labels.items():
+for action, label in action_labels.items():
     correct = 0
     total = 0
     guess_table = [0] * 5
@@ -113,18 +128,9 @@ for action, _ in action_labels.items():
 
         guessed_label = np.argmax(outputs)
         guess_table[guessed_label] += 1
+        if guessed_label == label:
+            correct += 1
 
-        num_correct_labels = 0
-        for label in labels_of_sample[0]:
-            if network_labels_real_labels_mapping[guessed_label] == label:
-                correct += 1
-                num_correct_labels += 1
-
-        if num_correct_labels > 1:
-            print('action: {}'.format(file_address))
-
-        # if guessed_label == label:
-        #     correct += 1
         total += 1
     print('accuracy:')
     print(float(correct) / float(total))
