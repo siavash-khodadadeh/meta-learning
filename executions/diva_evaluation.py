@@ -112,7 +112,7 @@ for action in sorted(action_labels.keys()):
     guess_table = [0] * len(action_labels)
     print(action)
     sys.stdout.flush()
-    for file_address in os.listdir(os.path.join(base_address, action))[:200]:
+    for file_address in os.listdir(os.path.join(base_address, action))[:50]:
         tf_record_address = os.path.join(base_address, action, file_address)
         dataset = tf.data.TFRecordDataset([tf_record_address])
         dataset = dataset.map(extract_video)
