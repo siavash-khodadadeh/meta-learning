@@ -8,7 +8,7 @@ def parse_example(example_proto):
         'task': tf.FixedLenFeature([], tf.string),
         'len': tf.FixedLenFeature([], tf.int64),
         'video': tf.FixedLenFeature([], tf.string),
-        # 'labels': tf.FixedLenFeature([], tf.string),
+        'labels': tf.FixedLenFeature([], tf.string),
     }
     parsed_example = tf.parse_single_example(example_proto, features)
     return parsed_example
@@ -255,6 +255,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         label = tf.one_hot(label, depth=len(classes_list))
 
         labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
+        labels = tf.cast(labels, tf.float32)
 
         return feature, labels
 
