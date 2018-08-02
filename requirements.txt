@@ -4,3 +4,4 @@ tf-nightly-gpu
 pillow
 scipy
 keras
+opencv-python
