@@ -254,9 +254,9 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         label = table.lookup(label)
         label = tf.one_hot(label, depth=len(classes_list))
 
-        # labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
+        labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
 
-        return feature, label
+        return feature, labels
 
     directories = os.listdir(dataset_address)
     directories = [os.path.join(dataset_address, directory) + '/*' for directory in directories]
