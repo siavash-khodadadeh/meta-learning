@@ -8,7 +8,6 @@ def parse_example(example_proto):
         'task': tf.FixedLenFeature([], tf.string),
         'len': tf.FixedLenFeature([], tf.int64),
         'video': tf.FixedLenFeature([], tf.string),
-        'labels': tf.FixedLenFeature([], tf.string),
     }
     parsed_example = tf.parse_single_example(example_proto, features)
     return parsed_example
@@ -236,6 +235,16 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
 def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
         dataset_address
 ):
+    def parse_diva_example(example_proto):
+        features = {
+            'task': tf.FixedLenFeature([], tf.string),
+            'len': tf.FixedLenFeature([], tf.int64),
+            'video': tf.FixedLenFeature([], tf.string),
+            'labels': tf.FixedLenFeature([], tf.string),
+        }
+        parsed_example = tf.parse_single_example(example_proto, features)
+        return parsed_example
+
     classes_list, table = prepare_classes_list_and_table(dataset_address)
     if 'kinetics' in dataset_address:
         dataset_name = 'kinetics'
@@ -245,7 +254,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         dataset_name = 'ucf-101'
 
     def _parse_example(example):
-        parsed_example = parse_example(example)
+        parsed_example = parse_diva_example(example)
         feature = extract_video(parsed_example, dataset_name)
 
         example_address = parsed_example['task']
