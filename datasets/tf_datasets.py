@@ -257,7 +257,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
         labels = tf.cast(labels, tf.float32)
 
-        return feature, label
+        return feature, labels
 
     directories = os.listdir(dataset_address)
     directories = [os.path.join(dataset_address, directory) + '/*' for directory in directories]

@@ -6,6 +6,8 @@ import cv2
 import h5py
 
 from datasets.ucf101_data_generator import DataSetUtils
+from settings import DIVA_DATASET_ADDRESS, DIVA_TFRECORD_DATASET_ADDRESS
+
 
 REAL_CLASS_LABELS = {
     0: "Riding",
@@ -73,10 +75,6 @@ INTERESTING_CLASS_LABELS = {
     'Opening': 7,
     'Riding': 9,
 }
-
-
-DIVA_DATASET_ADDRESS = '/home/siavash/DIVA-FewShot/'
-DIVA_TFRECORD_DATASET_ADDRESS = '/home/siavash/DIVA-TF-RECORDS/'
 
 
 def convert_to_5_fps(video):

@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-BASE_ADDRESS = '/home/siavash/UCF-101/'
+BASE_ADDRESS = '~/UCF-101/'
 UCF101_TFRECORDS = './ucf101_tfrecords/'
 
 
@@ -379,7 +379,7 @@ def test_tfercord_dataset():
 if __name__ == '__main__':
     DataSetUtils().create_tfrecord_dataset(
         base_address='/home/mkhan/kinetics_dataset2/clips/dataset/train/',
-        tf_recoreds_base_address='/home/siavash/kinetics_tfrecords/'
+        tf_recoreds_base_address='~/kinetics_tfrecords/'
     )
     # test_traditional_dataset()
     # test_tfercord_dataset()

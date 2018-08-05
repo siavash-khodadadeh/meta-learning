@@ -430,15 +430,14 @@ class ModelAgnosticMetaLearning(object):
     def _get_gpu_devices(self, num_gpu_devices):
         return ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices)]
 
-
     def get_exponential_decay_learning_rate(self, initial_learning_rate):
         global_step = tf.Variable(0, trainable=False)
         learning_rate = tf.train.exponential_decay(initial_learning_rate, global_step, 1000, 0.96, staircase=True)
         return learning_rate
 
     def loss_function(self, labels, logits):
-        # return tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=logits))
-        return tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+        # return tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
+        return tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits)
 
     def neural_loss_function(self, labels, logits):
         with tf.variable_scope('neural_loss', reuse=tf.AUTO_REUSE):

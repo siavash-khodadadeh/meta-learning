@@ -8,8 +8,8 @@ import numpy as np
 import settings
 from models import ModelAgnosticMetaLearning, C3DNetwork
 
-base_address = '/home/siavash/DIVA-TF-RECORDS/validation'
-labels_base_address = '/home/siavash/DIVA-FewShot/validation'
+base_address = '~/DIVA-TF-RECORDS/validation'
+labels_base_address = '~/DIVA-FewShot/validation'
 
 
 REAL_LABELS = {
@@ -31,26 +31,26 @@ network_labels_real_labels_mapping = {
 
 
 action_labels = {
-    'specialized_texting_phone': 16,
-    'specialized_talking_phone': 15,
-    'Unloading': 12,
-    'Transport_HeavyCarry': 11,
-    'Talking': 10,
-    'activity_carrying': 13,
     'Closing': 0,
-    'vehicle_u_turn': 19,
     'Closing_Trunk': 1,
-    'vehicle_turning_right': 18,
     'Entering': 2,
     'Exiting': 3,
-    'Open_Trunk': 6,
-    'activity_sitting': 14,
     'Interacts': 4,
-    'vehicle_turning_left': 17,
     'Loading': 5,
-    'Pull': 8,
+    'Open_Trunk': 6,
     'Opening': 7,
+    'Pull': 8,
     'Riding': 9,
+    'Talking': 10,
+    'Transport_HeavyCarry': 11,
+    'Unloading': 12,
+    'activity_carrying': 13,
+    'activity_sitting': 14,
+    'specialized_talking_phone': 15,
+    'specialized_texting_phone': 16,
+    'vehicle_turning_left': 17,
+    'vehicle_turning_right': 18,
+    'vehicle_u_turn': 19,
 }
 
 with tf.variable_scope('train_data'):
@@ -124,6 +124,11 @@ for action in sorted(action_labels.keys()):
         })
 
         guessed_label = np.argmax(outputs)
+
+        outputs = np.array(outputs).reshape(1, -1)
+        outputs = 1 / (1 + np.exp(-outputs))
+        print(np.where(outputs > 0.5))
+
         guess_table[guessed_label] += 1
         if guessed_label == action_labels[action]:
             correct += 1
@@ -142,6 +147,9 @@ for action in sorted(action_labels.keys()):
 confusion_matrix = np.array(class_labels_counters, dtype=np.float32).transpose()
 columns_sum = np.sum(confusion_matrix, axis=0)
 rows_sum = np.sum(confusion_matrix, axis=1)
+
+print('confusion matrix')
+print(confusion_matrix)
 
 counter = 0
 for action in sorted(action_labels.keys()):
