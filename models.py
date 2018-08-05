@@ -489,7 +489,7 @@ class ModelAgnosticMetaLearning(object):
                 _, merged_summary = self.sess.run((self.inner_train_ops, self.merged), feed_dict=feed_data)
 
             self.file_writer.add_summary(merged_summary, global_step=it)
-            if it % save_model_per_x_iterations == 0:
+            if it % save_model_per_x_iterations == 0 && it != 0:
                 self.save_model(path=self.saving_path, step=it)
 
     def evaluate(self, input_data=None):
