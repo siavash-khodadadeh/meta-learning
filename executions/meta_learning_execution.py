@@ -41,7 +41,7 @@ META_TEST_MODEL = 'kinetics/meta-train/20-way-classifier/1-shot/batch-size-20/nu
 META_TEST_STARTING_MODEL = os.path.join(settings.SAVED_MODELS_ADDRESS, META_TEST_MODEL)
 
 
-test_actions = sorted(os.listdir('~/ucf101_tfrecords/'))[-20:]
+test_actions = sorted(os.listdir(settings.UCF101_TF_RECORDS_ADDRESS))[-20:]
 
 
 def initialize():
@@ -71,12 +71,12 @@ def initialize():
         saving_path = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test', 'model')
 
     if DATASET == 'ucf-101':
-        base_address = '~/ucf101_tfrecords/'
+        base_address = settings.UCF101_TF_RECORDS_ADDRESS
         # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
     elif DATASET == 'diva':
-        base_address = '~/DIVA-TF-RECORDS/train/'
+        base_address = settings.DIVA_TRAIN_TF_RECORDS_ADDRESS
     else:
-        base_address = '~/kinetics_tfrecords/'
+        base_address = settings.KINETICS_TF_RECORDS_ADDRESS
 
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(

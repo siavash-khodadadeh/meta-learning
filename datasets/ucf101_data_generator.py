@@ -9,9 +9,11 @@ from keras.utils import to_categorical
 import numpy as np
 import matplotlib.pyplot as plt
 
+import settings
 
-BASE_ADDRESS = '~/UCF-101/'
-UCF101_TFRECORDS = './ucf101_tfrecords/'
+
+BASE_ADDRESS = settings.UCF101_RAW_IMAGES_ADDRESS
+UCF101_TFRECORDS = settings.UCF101_TF_RECORDS_ADDRESS
 
 
 def _int64_feature(value):
@@ -379,7 +381,7 @@ def test_tfercord_dataset():
 if __name__ == '__main__':
     DataSetUtils().create_tfrecord_dataset(
         base_address='/home/mkhan/kinetics_dataset2/clips/dataset/train/',
-        tf_recoreds_base_address='~/kinetics_tfrecords/'
+        tf_recoreds_base_address=settings.KINETICS_TF_RECORDS_ADDRESS
     )
     # test_traditional_dataset()
     # test_tfercord_dataset()

@@ -8,8 +8,8 @@ import numpy as np
 import settings
 from models import ModelAgnosticMetaLearning, C3DNetwork
 
-base_address = '~/DIVA-TF-RECORDS/validation'
-labels_base_address = '~/DIVA-FewShot/validation'
+base_address = settings.DIVA_VALIDATION_TF_RECORDS_ADDRESS
+labels_base_address = os.path.join(settings.DIVA_RAW_ADDRESS, 'validation')
 
 
 REAL_LABELS = {
