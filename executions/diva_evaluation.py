@@ -134,9 +134,10 @@ for action in sorted(action_labels.keys()):
         outputs = np.array(outputs).reshape(1, -1)
         outputs = 1 / (1 + np.exp(-outputs))
 
-        print(labels_np)
-        print(outputs)
-        print(np.where(outputs > 0.2))
+        # print(labels_np)
+        # print(outputs)
+        print(np.where(outputs > 0.2)[1])
+        print(np.where(labels_np == 1)[1])
 
         guess_table[guessed_label] += 1
         if guessed_label == action_labels[action]:
