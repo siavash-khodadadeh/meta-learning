@@ -134,13 +134,12 @@ maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-300')
 
 
 class_labels_counters = []
-hierarchy_counters = []
+hierarchy_confusion_matrix = np.zeros((6, 6))
 
 for action in sorted(action_labels.keys()):
     correct = 0
     total = 0
     guess_table = [0] * len(action_labels)
-    guess_hierarchy_table = [0] * len(hierarchy)
     print(action)
     sys.stdout.flush()
     for file_address in os.listdir(os.path.join(base_address, action))[:50]:
@@ -166,14 +165,14 @@ for action in sorted(action_labels.keys()):
         print(np.where(labels_np == 1)[1])
 
         guess_table[guessed_label] += 1
-        guess_hierarchy_table[hierarchy[guessed_label]] += 1
+        hierarchy_confusion_matrix[hierarchy[guessed_label]][hierarchy[action_labels[action]]] += 1
+
         if hierarchy[guessed_label] == hierarchy[action_labels[action]]:
             correct += 1
 
         total += 1
 
     class_labels_counters.append(guess_table)
-    hierarchy_counters.append(guess_hierarchy_table)
     print('accuracy:')
     print(float(correct) / float(total))
     print('guess table:')
@@ -189,7 +188,6 @@ rows_sum = np.sum(confusion_matrix, axis=1)
 print('confusion matrix')
 print(confusion_matrix)
 
-hierarchy_confusion_matrix = np.array(hierarchy_counters, dtype=np.float32).transpose()
 print('hierarchy confusion matrix')
 print(hierarchy_confusion_matrix)
 
