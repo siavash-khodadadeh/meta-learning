@@ -136,7 +136,9 @@ for action in sorted(action_labels.keys()):
 
         # print(labels_np)
         # print(outputs)
+        print('network outputs: ')
         print(np.where(outputs > 0.2)[1])
+        print('real labels: ')
         print(np.where(labels_np == 1)[1])
 
         guess_table[guessed_label] += 1
