@@ -439,7 +439,7 @@ class ModelAgnosticMetaLearning(object):
         # return tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits)
         # return tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits, weights=19 * labels + 1)
 
-        return tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits, weights=19 * labels + 1)
+        return tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
 
     def neural_loss_function(self, labels, logits):
         with tf.variable_scope('neural_loss', reuse=tf.AUTO_REUSE):
