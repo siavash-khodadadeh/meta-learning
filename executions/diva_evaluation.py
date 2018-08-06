@@ -122,17 +122,19 @@ for action in sorted(action_labels.keys()):
         dataset = dataset.map(extract_video)
         iterator = dataset.make_one_shot_iterator()
         video, labels = iterator.get_next()
-        video_np = maml.sess.run(video).reshape(1, 16, 112, 112, 3)
+        video_np, labels_np = maml.sess.run((video, labels))
+        video_np = video_np.reshape(1, 16, 112, 112, 3)
+        labels_np = labels_np.reshape(1, -1)
+
         outputs = maml.sess.run(maml.inner_model_out, feed_dict={
             input_data_ph: video_np
         })
 
         guessed_label = np.argmax(outputs)
-
         outputs = np.array(outputs).reshape(1, -1)
         outputs = 1 / (1 + np.exp(-outputs))
-        np_labels = maml.sess.run(labels)
-        print(np_labels)
+
+        print(labels_np)
         print(outputs)
         print(np.where(outputs > 0.5))
 
