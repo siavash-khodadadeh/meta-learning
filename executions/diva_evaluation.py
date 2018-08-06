@@ -105,7 +105,7 @@ maml = ModelAgnosticMetaLearning(
 )
 
 
-maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-90')
+maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-300')
 
 
 class_labels_counters = []
