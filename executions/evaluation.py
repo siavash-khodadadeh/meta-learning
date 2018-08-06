@@ -6,176 +6,46 @@ import numpy as np
 from models import ModelAgnosticMetaLearning, C3DNetwork
 from datasets.ucf101_data_generator import TraditionalDataset
 
-LOG_DIR = 'logs/ucf101_transfer_learning/'
+
+LOG_DIR = 'logs/temp/'
 BASE_ADDRESS = '/home/siavash/UCF-101/'
-# SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_80_5/model-400'
-# SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_to_20_classes/model-400'
-# SAVED_MODEL_ADDRESS = 'saved_models/transfer_learning_85/model-200'
-# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-4'
-# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-unsupervised-1'
-# SAVED_MODEL_ADDRESS = 'saved_models/ucf101-fit/model-kinetics-trained-1'
-SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/meta-test/model/-90'
-# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/model/-30'
-# SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/crcv/model/-30'
+
+SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/meta-test/model/-300'
 
 
-# TEST_ACTIONS = {
-#     'Surfing': 72,
-#     'Typing': 79,
-#     'Kayaking': 39,
-#     'FieldHockeyPenalty': 24,
-#     'BaseballPitch': 6,
-# }
-
-# TEST_ACTIONS = {
-#     'Surfing': 0,
-#     'Typing': 1,
-#     'Kayaking': 2,
-#     'FieldHockeyPenalty': 3,
-#     'BaseballPitch': 4,
-# }
-
-# TEST_ACTIONS = {
-#     'SoccerPenalty': 0,
-#     'Kayaking': 1,
-#     'Shotput': 2,
-#     'Typing': 3,
-#     'Bowling': 4,
-#     'WritingOnBoard': 5,
-#     'FrontCrawl': 6,
-#     'JavelinThrow': 7,
-#     'Surfing': 8,
-#     'ShavingBeard': 9,
-#     'CleanAndJerk': 10,
-#     'BaseballPitch': 11,
-#     'FrisbeeCatch': 12,
-#     'SumoWrestling': 13,
-#     'CuttingInKitchen': 14,
-#     'PlayingSitar': 15,
-#     'FloorGymnastics': 16,
-#     'Fencing': 17,
-#     'FieldHockeyPenalty': 18,
-#     'MoppingFloor': 19,
-# }
-
-# TEST_ACTIONS = {
-#     'PlayingSitar': 0,
-#     'ShavingBeard': 1,
-#     'CuttingInKitchen': 2,
-#     'FloorGymnastics': 3,
-#     'CleanAndJerk': 4,
-#     'SumoWrestling': 5,
-#     'Bowling': 6,
-#     'Kayaking': 7,
-#     'Shotput': 8,
-#     'FrisbeeCatch': 9,
-#     'Fencing': 10,
-#     'MoppingFloor': 11,
-#     'JumpingJack': 12,
-#     'Surfing': 13,
-#     'SoccerPenalty': 14,
-#     'Typing': 15,
-#     'FieldHockeyPenalty': 16,
-#     'JavelinThrow': 17,
-#     'FrontCrawl': 18,
-#     'BaseballPitch': 19,
-# }
-
-
-# TEST_ACTIONS = {
-#     'FrisbeeCatch': 0,
-#     'ShavingBeard': 1,
-#     'CliffDiving': 2,
-#     'BandMarching': 3,
-#     'FloorGymnastics': 4,
-#     'Fencing': 5,
-#     'JavelinThrow': 6,
-#     'Basketball': 7,
-#     'Bowling': 8,
-#     'PlayingPiano': 9,
-#     'FieldHockeyPenalty': 10,
-#     'WritingOnBoard': 11,
-#     'Archery': 12,
-#     'Typing': 13,
-#     'BabyCrawling': 14,
-#     'ApplyEyeMakeup': 15,
-#     'Biking': 16,
-#     'BlowDryHair': 17,
-#     'CuttingInKitchen': 18,
-#     'Billiards': 19,
-# }
-
-#
-# TEST_ACTIONS = {
-#     'PlayingSitar': 5,
-#     'MoppingFloor': 4,
-#     'FrontCrawl': 3,
-#     'Surfing': 9,
-#     'Bowling': 0,
-#     'SoccerPenalty': 7,
-#     'SumoWrestling': 8,
-#     'Shotput': 6,
-#     'CleanAndJerk': 1,
-#     'FloorGymnastics': 2,
-# }
-# TEST_ACTIONS = {
-#     'TrampolineJumping': 25,
-#     'ThrowDiscus': 24,
-#     'TableTennisShot': 23,
-#     'Swing': 22,
-#     'HorseRace': 9,
-#     'Drumming': 7,
-#     'StillRings': 21,
-#     'Bowling': 5,
-#     'ApplyEyeMakeup': 0,
-#     'SkateBoarding': 20,
-#     'VolleyballSpiking': 26,
-#     'CliffDiving': 6,
-#     'BaseballPitch': 1,
-#     'PommelHorse': 16,
-#     'FloorGymnastics': 8,
-#     'BlowingCandles': 4,
-#     'PizzaTossing': 13,
-#     'BasketballDunk': 3,
-#     'Basketball': 2,
-#     'JugglingBalls': 10,
-#     'Kayaking': 11,
-#     'Lunges': 12,
-#     'PlayingCello': 14,
-#     'PlayingSitar': 15,
-#     'Punch': 17,
-#     'RockClimbingIndoor': 18,
-#     'ShavingBeard': 19,
-# }
 TEST_ACTIONS = {
-    'StillRings': 4,
-    'SoccerPenalty': 3,
-    'SoccerJuggling': 2,
+    'YoYo': 19,
+    'WritingOnBoard': 18,
+    'WallPushups': 17,
+    'WalkingWithDog': 16,
+    'VolleyballSpiking': 15,
+    'ThrowDiscus': 11,
+    'TennisSwing': 10,
+    'Skijet': 0,
     'SkyDiving': 1,
-    'Skijet': 0
+    'SumoWrestling': 5,
+    'TaiChi': 9,
+    'SoccerJuggling': 2,
+    'SoccerPenalty': 3,
+    'UnevenBars': 14,
+    'TrampolineJumping': 12,
+    'StillRings': 4,
+    'Swing': 7,
+    'Typing': 13,
+    'TableTennisShot': 8,
+    'Surfing': 6,
 }
-
-
-# ALL UCF 101
-# TEST_ACTIONS_LIST = sorted(os.listdir(BASE_ADDRESS))
-# TEST_ACTIONS = {}
-
-# counter = 0
-# for action in TEST_ACTIONS_LIST:
-#     TEST_ACTIONS[action] = counter
-#     counter += 1
-# ALL UCF 101 finished
 
 
 def evaluate():
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 5])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
@@ -231,6 +101,10 @@ def evaluate():
     print(correct)
 
     confusion_matrix = np.array(class_labels_couners, dtype=np.float32).transpose()
+    print('\n\n')
+    print('confusion matrix')
+    print(confusion_matrix)
+    print('\n\n')
     columns_sum = np.sum(confusion_matrix, axis=0)
     rows_sum = np.sum(confusion_matrix, axis=1)
 
