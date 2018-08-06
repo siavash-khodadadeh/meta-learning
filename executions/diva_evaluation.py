@@ -131,6 +131,8 @@ for action in sorted(action_labels.keys()):
 
         outputs = np.array(outputs).reshape(1, -1)
         outputs = 1 / (1 + np.exp(-outputs))
+        print(labels)
+        print(outputs)
         print(np.where(outputs > 0.5))
 
         guess_table[guessed_label] += 1
