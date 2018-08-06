@@ -136,7 +136,7 @@ for action in sorted(action_labels.keys()):
 
         print(labels_np)
         print(outputs)
-        print(np.where(outputs > 0.5))
+        print(np.where(outputs > 0.2))
 
         guess_table[guessed_label] += 1
         if guessed_label == action_labels[action]:
