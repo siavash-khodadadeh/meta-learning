@@ -78,6 +78,31 @@ action_labels = {
     'vehicle_u_turn': 19,
 }
 
+
+hierarchy = {
+    0: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 1,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 2,
+    9: 3,
+    10: 1,
+    11: 2,
+    12: 0,
+    13: 2,
+    14: 0,
+    15: 4,
+    16: 4,
+    17: 5,
+    18: 5,
+    19: 5,
+}
+
+
 with tf.variable_scope('train_data'):
     input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
     input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, len(action_labels)])
@@ -129,20 +154,17 @@ for action in sorted(action_labels.keys()):
         outputs = maml.sess.run(maml.inner_model_out, feed_dict={
             input_data_ph: video_np
         })
-
         guessed_label = np.argmax(outputs)
+
         outputs = np.array(outputs).reshape(1, -1)
         outputs = 1 / (1 + np.exp(-outputs))
-
-        # print(labels_np)
-        # print(outputs)
         print('network outputs: ')
         print(np.where(outputs > 0.2)[1])
         print('real labels: ')
         print(np.where(labels_np == 1)[1])
 
         guess_table[guessed_label] += 1
-        if guessed_label == action_labels[action]:
+        if hierarchy[guessed_label] == hierarchy[action_labels[action]]:
             correct += 1
 
         total += 1
