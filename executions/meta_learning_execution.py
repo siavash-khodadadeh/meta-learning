@@ -11,14 +11,14 @@ from models import ModelAgnosticMetaLearning, C3DNetwork
 import settings
 
 
-META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
+META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
+DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
 N = 20  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
-NUM_ITERATIONS = 10000
+NUM_ITERATIONS = 100000
 REPORT_AFTER_STEP = 20
-SAVE_AFTER_STEP = 5000
+SAVE_AFTER_STEP = 2000
 BATCH_SIZE = 20  # The batch size.
 META_LEARNING_RATE = 0.00001
 LEARNING_RATE = 0.01
@@ -53,7 +53,6 @@ def initialize():
     model_dir = os.path.join(
         DATASET,
         'meta-train',
-        'sigmoid-loss-function',
         '{}-way-classifier'.format(N),
         '{}-shot'.format(K),
         'batch-size-{}'.format(BATCH_SIZE),
