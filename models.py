@@ -480,7 +480,7 @@ class ModelAgnosticMetaLearning(object):
             else:
                 self.sess.run(self.train_op)
 
-            if it % save_after_x_step == 0:
+            if it % save_after_x_step == 0 and it != 0:
                 self.save_model(path=self.saving_path, step=it)
 
     def meta_test(self, num_iterations, feed_data=None, save_model_per_x_iterations=20):
