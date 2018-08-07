@@ -233,7 +233,8 @@ def create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
 
 
 def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
-        dataset_address
+        dataset_address,
+        actions_include
 ):
     def parse_diva_example(example_proto):
         features = {
@@ -245,7 +246,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         parsed_example = tf.parse_single_example(example_proto, features)
         return parsed_example
 
-    classes_list, table = prepare_classes_list_and_table(dataset_address)
+    classes_list, table = prepare_classes_list_and_table(dataset_address, actions_include=actions_include)
     if 'kinetics' in dataset_address:
         dataset_name = 'kinetics'
     elif 'DIVA' in dataset_address:
@@ -266,7 +267,7 @@ def create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class
         labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
         labels = tf.cast(labels, tf.float32)
 
-        return feature, labels
+        return feature, label
 
     directories = os.listdir(dataset_address)
     directories = [os.path.join(dataset_address, directory) + '/*' for directory in directories]
