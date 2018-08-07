@@ -334,7 +334,8 @@ class ModelAgnosticMetaLearning(object):
         self.learning_rate = learning_rate
         self.num_classes = num_classes
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
+        with tf.device('/cpu:0'):
+            self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
 
         self.input_data = input_data_ph
         self.input_labels = input_labels_ph
@@ -542,7 +543,7 @@ class ModelAgnosticMetaLearning(object):
         grads = self.optimizer.compute_gradients(
             train_loss,
             var_list=self.model_variables,
-            colocate_gradients_with_ops=False
+            colocate_gradients_with_ops=True
         )
         return grads
 
@@ -559,7 +560,7 @@ class ModelAgnosticMetaLearning(object):
             gradients = self.meta_optimizer.compute_gradients(
                 meta_loss,
                 var_list=self.model_variables,
-                colocate_gradients_with_ops=False
+                colocate_gradients_with_ops=True
             )
 
         return meta_loss, gradients
