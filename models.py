@@ -334,8 +334,7 @@ class ModelAgnosticMetaLearning(object):
         self.learning_rate = learning_rate
         self.num_classes = num_classes
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        with tf.device('/cpu:0'):
-            self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
+        self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
 
         self.input_data = input_data_ph
         self.input_labels = input_labels_ph
@@ -357,6 +356,9 @@ class ModelAgnosticMetaLearning(object):
         input_labels_splits = data_splits[1]
         input_validation_splits = data_splits[2]
         input_validation_labels_splits = data_splits[3]
+
+        with tf.device('/cpu:0'):
+            self.model = self._create_model(input_data_splits[0])
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
