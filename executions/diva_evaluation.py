@@ -125,7 +125,7 @@ maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-300')
 
 
 class_labels_counters = []
-hierarchy_confusion_matrix = np.zeros((6, 6))
+hierarchy_confusion_matrix = np.zeros((4, 4))
 
 for action in sorted(action_labels.keys()):
     correct = 0
