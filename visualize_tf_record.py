@@ -64,9 +64,9 @@ def save_clip_as_gif(directory, saving_address):
 
 
 if __name__ == '__main__':
-    base_address = '/home/siavash/DIVA-TF-RECORDS/validation/'
+    base_address = '/home/siavash/DIVA-TF-RECORDS/train/'
     actions = os.listdir(base_address)
     for action in actions:
         action_address = os.path.join(base_address, action)
-        saving_gif_address = '/home/siavash/diva-visualization/validation/{}.gif'.format(action)
+        saving_gif_address = '/home/siavash/diva-visualization/train/{}.gif'.format(action)
         save_clip_as_gif(action_address, saving_gif_address)

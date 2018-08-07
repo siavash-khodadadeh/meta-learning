@@ -37,15 +37,6 @@ base_address = settings.DIVA_VALIDATION_TF_RECORDS_ADDRESS
 labels_base_address = os.path.join(settings.DIVA_RAW_ADDRESS, 'validation')
 
 
-REAL_LABELS = {
-    5: "specialized_texting_phone",
-    12: "specialized_talking_phone",
-    22: "Open_Trunk",
-    23: "Closing_Trunk",
-    24: "vehicle_u_turn",
-}
-
-
 network_labels_real_labels_mapping = {
     0: 23,
     1: 22,
@@ -159,10 +150,10 @@ for action in sorted(action_labels.keys()):
 
         outputs = np.array(outputs).reshape(1, -1)
         outputs = 1 / (1 + np.exp(-outputs))
-        print('network outputs: ')
-        print(np.where(outputs > 0.2)[1])
-        print('real labels: ')
-        print(np.where(labels_np == 1)[1])
+        # print('network outputs: ')
+        # print(np.where(outputs > 0.2)[1])
+        # print('real labels: ')
+        # print(np.where(labels_np == 1)[1])
 
         guess_table[guessed_label] += 1
         hierarchy_confusion_matrix[hierarchy[guessed_label]][hierarchy[action_labels[action]]] += 1
