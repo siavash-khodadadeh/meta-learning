@@ -132,6 +132,7 @@ for action in sorted(action_labels.keys()):
     total = 0
     guess_table = [0] * len(action_labels)
     print(action)
+    action_labels_sum = np.zeros(1, 20)
     sys.stdout.flush()
     for file_address in os.listdir(os.path.join(base_address, action))[:50]:
         tf_record_address = os.path.join(base_address, action, file_address)
@@ -143,6 +144,7 @@ for action in sorted(action_labels.keys()):
         video_np = video_np.reshape(1, 16, 112, 112, 3)
         labels_np = labels_np.reshape(1, -1)
 
+        action_labels_sum += labels_np
         outputs = maml.sess.run(maml.inner_model_out, feed_dict={
             input_data_ph: video_np
         })
@@ -168,6 +170,8 @@ for action in sorted(action_labels.keys()):
     print(float(correct) / float(total))
     print('guess table:')
     print(guess_table)
+    print('real labels:')
+    print(action_labels_sum)
 
     sys.stdout.flush()
 
