@@ -542,7 +542,7 @@ class ModelAgnosticMetaLearning(object):
         grads = self.optimizer.compute_gradients(
             train_loss,
             var_list=self.model_variables,
-            colocate_gradients_with_ops=True
+            colocate_gradients_with_ops=False
         )
         return grads
 
@@ -559,7 +559,7 @@ class ModelAgnosticMetaLearning(object):
             gradients = self.meta_optimizer.compute_gradients(
                 meta_loss,
                 var_list=self.model_variables,
-                colocate_gradients_with_ops=True
+                colocate_gradients_with_ops=False
             )
 
         return meta_loss, gradients
