@@ -357,9 +357,9 @@ class ModelAgnosticMetaLearning(object):
         input_validation_splits = data_splits[2]
         input_validation_labels_splits = data_splits[3]
 
-        # with tf.device('/cpu:0'):
-        #     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-        #         self.model = self._create_model(input_data_splits[0])
+        with tf.device('/cpu:0'):
+            with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
+                self.model = self._create_model(input_data_splits[0])
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
             zip(
@@ -376,8 +376,22 @@ class ModelAgnosticMetaLearning(object):
                     self.inner_losses.append(inner_loss)
                     self.inner_grads.append(grads)
 
-                    updated_vars = self._compute_updated_vars_and_inner_train_op(grads)
+        with tf.variable_scope('average_inner_gradients'):
+            with tf.device('/cpu:0'):
+                averaged_inner_grads = average_gradients(self.inner_grads)
+                updated_vars = self._compute_updated_vars_and_inner_train_op(averaged_inner_grads)
 
+        for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
+                zip(
+                    self.devices,
+                    input_data_splits,
+                    input_labels_splits,
+                    input_validation_splits,
+                    input_validation_labels_splits
+                )
+        ):
+            with tf.name_scope('device{device_idx}'.format(device_idx=device_idx)):
+                with tf.device(device_name):
                     meta_loss, meta_grads = self._create_meta_part(
                         input_validation,
                         input_validation_labels,
