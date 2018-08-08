@@ -381,8 +381,6 @@ class ModelAgnosticMetaLearning(object):
                 averaged_inner_grads = average_gradients(self.inner_grads)
                 updated_vars = self._compute_updated_vars_and_inner_train_op(averaged_inner_grads)
 
-
-        averaged_meta_grads = None
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
                 zip(
                     self.devices,
@@ -402,16 +400,11 @@ class ModelAgnosticMetaLearning(object):
                     self.tower_meta_losses.append(meta_loss)
                     self.tower_meta_grads.append(meta_grads)
 
-                    if averaged_meta_grads is None:
-                        averaged_meta_grads = average_gradients([meta_grads, meta_grads])
-                    else:
-                        averaged_meta_grads = average_gradients([averaged_meta_grads, meta_grads])
-
         with tf.variable_scope('average_gradients'):
             with tf.device('/cpu:0'):
-                self.train_op = self.meta_optimizer.apply_gradients(averaged_meta_grads)
-                # averaged_meta_grads = average_gradients(self.tower_meta_grads)
                 # self.train_op = self.meta_optimizer.apply_gradients(averaged_meta_grads)
+                averaged_meta_grads = average_gradients(self.tower_meta_grads)
+                self.train_op = self.meta_optimizer.apply_gradients(averaged_meta_grads)
 
         with tf.variable_scope('average_meta_loss'):
             with tf.device('/cpu:0'):
