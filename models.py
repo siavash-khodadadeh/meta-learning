@@ -374,9 +374,8 @@ class ModelAgnosticMetaLearning(object):
                 with tf.device(device_name):
                     grads, inner_loss = self._create_inner_model_part(input_data, input_labels)
                     self.inner_losses.append(inner_loss)
-                    for grad_and_var in grads:
-                        tf.stop_gradient(grad_and_var[0])
-                    self.inner_grads.append(grads)
+                    grads_stopped = [tf.stop_gradient(grad_and_var[0]) for grad_and_var in grads]
+                    self.inner_grads.append(grads_stopped)
 
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/cpu:0'):
