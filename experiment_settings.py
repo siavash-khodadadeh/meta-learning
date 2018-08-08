@@ -1,5 +1,7 @@
 import os
 
+import settings
+
 
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
