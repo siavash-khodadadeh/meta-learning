@@ -76,7 +76,7 @@ def initialize():
             input_data_ph, input_labels_ph, iterator, table = \
                 create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch(
                     dataset_address=base_address,
-                    actions_include=diva_test_actions[0]
+                    actions_include=None
                 )
 
             val_data_ph = input_data_ph
