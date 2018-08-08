@@ -21,6 +21,7 @@ def initialize():
     model_dir = os.path.join(
         DATASET,
         'meta-train',
+        'multiple-gpus',
         '{}-way-classifier'.format(N),
         '{}-shot'.format(K),
         'batch-size-{}'.format(BATCH_SIZE),
