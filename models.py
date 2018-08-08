@@ -403,9 +403,9 @@ class ModelAgnosticMetaLearning(object):
                     self.tower_meta_grads.append(meta_grads)
 
                     if averaged_meta_grads is None:
-                        avereged_meta_grads = average_gradients([meta_grads, meta_grads])
+                        averaged_meta_grads = average_gradients([meta_grads, meta_grads])
                     else:
-                        averaged_meta_grads = average_gradients([avereged_meta_grads, meta_grads])
+                        averaged_meta_grads = average_gradients([averaged_meta_grads, meta_grads])
 
         self.train_op = self.meta_optimizer.apply_gradients(averaged_meta_grads)
         # with tf.variable_scope('average_gradients'):
