@@ -135,12 +135,12 @@ def create_data_feed_for_train(base_address, test_actions, batch_size, k, n, ran
     with tf.variable_scope('train_data'):
         input_data_ph = tf.cast(next_batch[0][:k * batch_size], tf.float32)
         input_labels_ph = next_batch[1][:k * batch_size]
-        tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+        # tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.cast(next_batch[0][k * batch_size:], tf.float32)
         val_labels_ph = next_batch[1][k * batch_size:]
-        tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
+        # tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=k * batch_size)
 
     if random_labels:
         input_labels_ph = get_random_labels(batch_size, n)
