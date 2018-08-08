@@ -4,7 +4,7 @@ import settings
 
 
 META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
-DATASET = 'diva'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
+DATASET = 'ucf-101'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
 N = 5  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
