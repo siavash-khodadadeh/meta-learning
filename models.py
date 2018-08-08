@@ -445,6 +445,8 @@ class ModelAgnosticMetaLearning(object):
             else:
                 updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
+            tf.stop_gradient(updated_vars[grad_info[1].name[6:]])
+
             self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
         return updated_vars
 
