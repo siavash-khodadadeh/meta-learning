@@ -121,7 +121,7 @@ maml = ModelAgnosticMetaLearning(
 )
 
 
-maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-300')
+maml.load_model(path=settings.SAVED_MODELS_ADDRESS + '/meta-test/model/-120')
 
 
 class_labels_counters = []
@@ -132,7 +132,7 @@ for action in sorted(action_labels.keys()):
     total = 0
     guess_table = [0] * len(action_labels)
     print(action)
-    action_labels_sum = np.zeros(1, 20)
+    action_labels_sum = np.zeros((1, 20))
     sys.stdout.flush()
     for file_address in os.listdir(os.path.join(base_address, action))[:50]:
         tf_record_address = os.path.join(base_address, action, file_address)
