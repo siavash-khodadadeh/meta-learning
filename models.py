@@ -379,6 +379,7 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('average_inner_gradients'):
             with tf.device('/cpu:0'):
                 averaged_inner_grads = average_gradients(self.inner_grads)
+                tf.stop_gradient(averaged_inner_grads)
                 updated_vars = self._compute_updated_vars_and_inner_train_op(averaged_inner_grads)
 
         for device_idx, (device_name, input_data, input_labels, input_validation, input_validation_labels) in enumerate(
