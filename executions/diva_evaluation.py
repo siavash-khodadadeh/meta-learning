@@ -15,6 +15,7 @@ def extract_video(example):
         'video': tf.FixedLenFeature([], tf.string),
         'labels': tf.FixedLenFeature([], tf.string),
     }
+
     parsed_example = tf.parse_single_example(example, features)
     start_frame_number = tf.cond(
         tf.equal(parsed_example['len'], 16),

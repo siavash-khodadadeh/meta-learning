@@ -4,8 +4,6 @@ import tensorflow as tf
 import numpy as np
 
 from models import ModelAgnosticMetaLearning, C3DNetwork
-from datasets.ucf101_data_generator import TraditionalDataset
-from executions.diva_evaluation import extract_video
 from settings import UCF101_TF_RECORDS_ADDRESS
 import settings
 
@@ -46,6 +44,31 @@ TEST_ACTIONS = {
     'SkyDiving': 1,
     'Skijet': 0,
 }
+
+
+def extract_video(example):
+    features = {
+        'task': tf.FixedLenFeature([], tf.string),
+        'len': tf.FixedLenFeature([], tf.int64),
+        'video': tf.FixedLenFeature([], tf.string),
+    }
+
+    parsed_example = tf.parse_single_example(example, features)
+    start_frame_number = tf.cond(
+        tf.equal(parsed_example['len'], 16),
+        lambda: tf.cast(0, tf.int64),
+        lambda: tf.random_uniform([], minval=0, maxval=parsed_example['len'] - 16, dtype=tf.int64)
+    )
+    decoded_video = tf.decode_raw(parsed_example['video'], tf.uint8)
+    resized_video = tf.reshape(decoded_video, shape=(-1, 112, 112, 3))
+
+    clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
+    clip = tf.reshape(clip, (16, 112, 112, 3))
+
+    labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
+    labels = tf.cast(labels, tf.float32)
+
+    return clip, labels
 
 
 def evaluate():
