@@ -65,10 +65,7 @@ def extract_video(example):
     clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
     clip = tf.reshape(clip, (16, 112, 112, 3))
 
-    labels = tf.decode_raw(parsed_example['labels'], tf.uint8)
-    labels = tf.cast(labels, tf.float32)
-
-    return clip, labels
+    return clip
 
 
 def evaluate():
@@ -112,9 +109,8 @@ def evaluate():
             dataset = dataset.map(extract_video)
             iterator = dataset.make_one_shot_iterator()
             video, labels = iterator.get_next()
-            video_np, labels_np = maml.sess.run((video, labels))
+            video_np = maml.sess.run((video, labels))
             video_np = video_np.reshape(1, 16, 112, 112, 3)
-            labels_np = labels_np.reshape(1, -1)
 
             outputs = maml.sess.run(maml.inner_model_out, feed_dict={
                 maml.input_data: video_np,
