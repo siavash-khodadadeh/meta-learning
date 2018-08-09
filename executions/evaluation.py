@@ -5,12 +5,13 @@ import numpy as np
 
 from models import ModelAgnosticMetaLearning, C3DNetwork
 from datasets.ucf101_data_generator import TraditionalDataset
+from settings import UCF101_RAW_IMAGES_ADDRESS
+import settings
 
 
-LOG_DIR = 'logs/temp/'
-BASE_ADDRESS = '/home/siavash/UCF-101/'
+LOG_DIR = os.path.join(settings.PROJECT_ADDRESS, 'logs/temp/')
 
-SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/meta-test/model/-300'
+SAVED_MODEL_ADDRESS = os.path.join(settings.SAVED_MODELS_ADDRESS, 'test/model/-300')
 
 
 # TEST_ACTIONS = {
@@ -81,8 +82,8 @@ def evaluate():
     for action in sorted(TEST_ACTIONS.keys()):
         class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
-        for file_address in os.listdir(BASE_ADDRESS + action):
-            video_address = BASE_ADDRESS + action + '/' + file_address
+        for file_address in os.listdir(os.path.join(UCF101_RAW_IMAGES_ADDRESS, action)):
+            video_address = os.path.join(UCF101_RAW_IMAGES_ADDRESS, action, file_address)
             if len(os.listdir(video_address)) < 16:
                 continue
 
