@@ -11,7 +11,7 @@ import settings
 
 LOG_DIR = os.path.join(settings.PROJECT_ADDRESS, 'logs/temp/')
 
-SAVED_MODEL_ADDRESS = os.path.join(settings.SAVED_MODELS_ADDRESS, 'test/model/-300')
+SAVED_MODEL_ADDRESS = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test/model/-300')
 
 
 # TEST_ACTIONS = {
