@@ -5,7 +5,8 @@ import numpy as np
 
 from models import ModelAgnosticMetaLearning, C3DNetwork
 from datasets.ucf101_data_generator import TraditionalDataset
-from settings import UCF101_RAW_IMAGES_ADDRESS
+from executions.diva_evaluation import extract_video
+from settings import UCF101_TF_RECORDS_ADDRESS
 import settings
 
 
@@ -82,15 +83,18 @@ def evaluate():
     for action in sorted(TEST_ACTIONS.keys()):
         class_label_counter = [0] * len(TEST_ACTIONS)
         print(action)
-        for file_address in os.listdir(os.path.join(UCF101_RAW_IMAGES_ADDRESS, action)):
-            video_address = os.path.join(UCF101_RAW_IMAGES_ADDRESS, action, file_address)
-            if len(os.listdir(video_address)) < 16:
-                continue
-
-            video, _ = TraditionalDataset.get_data_and_labels(None, [[video_address]], num_classes=len(TEST_ACTIONS))
+        for file_address in os.listdir(os.path.join(UCF101_TF_RECORDS_ADDRESS, action)):
+            tf_record_address = os.path.join(UCF101_TF_RECORDS_ADDRESS, action, file_address)
+            dataset = tf.data.TFRecordDataset([tf_record_address])
+            dataset = dataset.map(extract_video)
+            iterator = dataset.make_one_shot_iterator()
+            video, labels = iterator.get_next()
+            video_np, labels_np = maml.sess.run((video, labels))
+            video_np = video_np.reshape(1, 16, 112, 112, 3)
+            labels_np = labels_np.reshape(1, -1)
 
             outputs = maml.sess.run(maml.inner_model_out, feed_dict={
-                maml.input_data: video,
+                maml.input_data: video_np,
             })
 
             label = np.argmax(outputs, 2)
