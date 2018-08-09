@@ -50,12 +50,12 @@ TEST_ACTIONS = {
 def evaluate():
     with tf.variable_scope('train_data'):
         input_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
+        input_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, len(TEST_ACTIONS)])
         tf.summary.image('train', input_data_ph[:, 0, :, :, :], max_outputs=25)
 
     with tf.variable_scope('validation_data'):
         val_data_ph = tf.placeholder(dtype=tf.float32, shape=[None, 16, 112, 112, 3])
-        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, 20])
+        val_labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, len(TEST_ACTIONS)])
         tf.summary.image('validation', val_data_ph[:, 0, :, :, :], max_outputs=25)
 
     maml = ModelAgnosticMetaLearning(
