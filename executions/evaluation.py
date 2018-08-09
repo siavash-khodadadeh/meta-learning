@@ -13,27 +13,36 @@ BASE_ADDRESS = '/home/siavash/UCF-101/'
 SAVED_MODEL_ADDRESS = '/home/siavash/programming/FewShotLearning/saved_models/newton/meta-test/model/-300'
 
 
+# TEST_ACTIONS = {
+#     'YoYo': 19,
+#     'WritingOnBoard': 18,
+#     'WallPushups': 17,
+#     'WalkingWithDog': 16,
+#     'VolleyballSpiking': 15,
+#     'ThrowDiscus': 11,
+#     'TennisSwing': 10,
+#     'Skijet': 0,
+#     'SkyDiving': 1,
+#     'SumoWrestling': 5,
+#     'TaiChi': 9,
+#     'SoccerJuggling': 2,
+#     'SoccerPenalty': 3,
+#     'UnevenBars': 14,
+#     'TrampolineJumping': 12,
+#     'StillRings': 4,
+#     'Swing': 7,
+#     'Typing': 13,
+#     'TableTennisShot': 8,
+#     'Surfing': 6,
+# }
+
+
 TEST_ACTIONS = {
-    'YoYo': 19,
-    'WritingOnBoard': 18,
-    'WallPushups': 17,
-    'WalkingWithDog': 16,
-    'VolleyballSpiking': 15,
-    'ThrowDiscus': 11,
-    'TennisSwing': 10,
-    'Skijet': 0,
-    'SkyDiving': 1,
-    'SumoWrestling': 5,
-    'TaiChi': 9,
-    'SoccerJuggling': 2,
-    'SoccerPenalty': 3,
-    'UnevenBars': 14,
-    'TrampolineJumping': 12,
     'StillRings': 4,
-    'Swing': 7,
-    'Typing': 13,
-    'TableTennisShot': 8,
-    'Surfing': 6,
+    'SoccerPenalty': 3,
+    'SoccerJuggling': 2,
+    'SkyDiving': 1,
+    'Skijet': 0,
 }
 
 
