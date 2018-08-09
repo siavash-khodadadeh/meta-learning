@@ -58,13 +58,18 @@ def initialize():
         )
     else:
         if DATASET == 'ucf-101' or DATASET == 'kinetics':
-            print(test_actions[:BATCH_SIZE * NUM_GPUS])
+            if test_actions is not None:
+                test_actions = test_actions[:BATCH_SIZE * NUM_GPUS]
+
+            print("test actiosn: ")
+            print(test_actions)
+
             input_data_ph, input_labels_ph, iterator, table = \
                 create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
                     dataset_address=base_address,
                     k=K,
                     batch_size=BATCH_SIZE * NUM_GPUS,
-                    actions_include=test_actions[:BATCH_SIZE * NUM_GPUS],
+                    actions_include=test_actions,
                 )
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
