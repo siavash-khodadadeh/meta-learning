@@ -108,8 +108,8 @@ def evaluate():
             dataset = tf.data.TFRecordDataset([tf_record_address])
             dataset = dataset.map(extract_video)
             iterator = dataset.make_one_shot_iterator()
-            video, labels = iterator.get_next()
-            video_np = maml.sess.run((video, labels))
+            video = iterator.get_next()
+            video_np = maml.sess.run(video)
             video_np = video_np.reshape(1, 16, 112, 112, 3)
 
             outputs = maml.sess.run(maml.inner_model_out, feed_dict={
