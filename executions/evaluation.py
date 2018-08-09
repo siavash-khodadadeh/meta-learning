@@ -60,7 +60,12 @@ def extract_video(example):
         lambda: tf.random_uniform([], minval=0, maxval=parsed_example['len'] - 16, dtype=tf.int64)
     )
     decoded_video = tf.decode_raw(parsed_example['video'], tf.uint8)
-    resized_video = tf.reshape(decoded_video, shape=(-1, 112, 112, 3))
+    reshaped_video = tf.reshape(decoded_video, shape=(-1, 240, 320, 3))
+    resized_video = tf.cast(tf.image.resize_images(
+        reshaped_video,
+        size=(112, 112),
+        method=tf.image.ResizeMethod.BILINEAR
+    ), tf.uint8)
 
     clip = resized_video[start_frame_number:start_frame_number + 16, :, :, :]
     clip = tf.reshape(clip, (16, 112, 112, 3))
