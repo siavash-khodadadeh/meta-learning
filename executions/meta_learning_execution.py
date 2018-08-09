@@ -14,6 +14,11 @@ from experiment_settings import RANDOM_SEED, DATASET, N, K, BATCH_SIZE, NUM_GPUS
 
 
 def initialize():
+    if test_actions is not None:
+        execution_test_actions = test_actions[:BATCH_SIZE * NUM_GPUS]
+    else:
+        execution_test_actions = None
+
     if RANDOM_SEED != -1:
         random.seed(RANDOM_SEED)
         tf.set_random_seed(RANDOM_SEED)
@@ -41,7 +46,6 @@ def initialize():
 
     if DATASET == 'ucf-101':
         base_address = settings.UCF101_TF_RECORDS_ADDRESS
-        # '/home/siavash/programming/FewShotLearning/ucf101_tfrecords/'
     elif DATASET == 'diva':
         base_address = settings.DIVA_TRAIN_TF_RECORDS_ADDRESS
     else:
@@ -50,7 +54,7 @@ def initialize():
     if META_TRAIN:
         input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
             base_address=base_address,
-            test_actions=test_actions,
+            test_actions=execution_test_actions,
             batch_size=BATCH_SIZE * NUM_GPUS,
             k=K,
             n=N,
@@ -58,18 +62,15 @@ def initialize():
         )
     else:
         if DATASET == 'ucf-101' or DATASET == 'kinetics':
-            if test_actions is not None:
-                test_actions = test_actions[:BATCH_SIZE * NUM_GPUS]
-
             print("test actiosn: ")
-            print(test_actions)
+            print(execution_test_actions)
 
             input_data_ph, input_labels_ph, iterator, table = \
                 create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset(
                     dataset_address=base_address,
                     k=K,
                     batch_size=BATCH_SIZE * NUM_GPUS,
-                    actions_include=test_actions,
+                    actions_include=execution_test_actions,
                 )
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
