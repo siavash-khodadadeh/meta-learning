@@ -16,4 +16,8 @@ DIVA_TRAIN_TF_RECORDS_ADDRESS = '/home/siavash/DIVA-TF-RECORDS/train/'
 DIVA_VALIDATION_TF_RECORDS_ADDRESS = '/home/siavash/DIVA-TF-RECORDS/validation/'
 DIVA_RAW_ADDRESS = '/home/siavash/DIVA-FewShot/'
 
+OMNIGLOT_RAW_ADDRESS = os.path.join(PROJECT_ADDRESS, 'data', 'omniglot_resized')
+OMNIGLOT_TF_RECORD_ADDRESS = '/home/siavash/omniglot_tfrecords/'
+
+
 KINETICS_TF_RECORDS_ADDRESS = '/home/siavash/kinetics_tfrecords/'

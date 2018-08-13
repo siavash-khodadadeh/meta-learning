@@ -3,9 +3,10 @@ import random
 
 import tensorflow as tf
 
+from datasets.omniglot_dataset import get_omniglot_tf_record_dataset
 from datasets.tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, \
     create_data_feed_for_train, create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch
-from models import ModelAgnosticMetaLearning, C3DNetwork
+from models import ModelAgnosticMetaLearning, C3DNetwork, NeuralNetwork
 import settings
 
 from experiment_settings import RANDOM_SEED, DATASET, N, K, BATCH_SIZE, NUM_GPUS, NUM_ITERATIONS, META_LEARNING_RATE, \
@@ -48,18 +49,28 @@ def initialize():
         base_address = settings.UCF101_TF_RECORDS_ADDRESS
     elif DATASET == 'diva':
         base_address = settings.DIVA_TRAIN_TF_RECORDS_ADDRESS
+    elif DATASET == 'omniglot':
+        base_address = settings.OMNIGLOT_TF_RECORD_ADDRESS
     else:
         base_address = settings.KINETICS_TF_RECORDS_ADDRESS
 
     if META_TRAIN:
-        input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
-            base_address=base_address,
-            test_actions=execution_test_actions,
-            batch_size=BATCH_SIZE * NUM_GPUS,
-            k=K,
-            n=N,
-            random_labels=False
-        )
+        if DATASET == 'omniglot':
+            input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, table = \
+                get_omniglot_tf_record_dataset(
+                    num_classes=N,
+                    num_samples_per_class=K,
+                    meta_batch_size=1,
+                )
+        else:
+            input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
+                base_address=base_address,
+                test_actions=execution_test_actions,
+                batch_size=BATCH_SIZE * NUM_GPUS,
+                k=K,
+                n=N,
+                random_labels=False
+            )
     else:
         if DATASET == 'ucf-101' or DATASET == 'kinetics':
             print("test actiosn: ")
@@ -90,7 +101,7 @@ def initialize():
             val_labels_ph = input_labels_ph
 
     maml = ModelAgnosticMetaLearning(
-        C3DNetwork,
+        NeuralNetwork,
         input_data_ph,
         input_labels_ph,
         val_data_ph,
@@ -115,7 +126,7 @@ def initialize():
 if __name__ == '__main__':
     maml = initialize()
     if META_TRAIN:
-        maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
+        # maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
             num_iterations=NUM_ITERATIONS + 1,
             report_after_x_step=REPORT_AFTER_STEP,

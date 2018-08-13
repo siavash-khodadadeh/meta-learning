@@ -2,6 +2,8 @@ import os
 
 import tensorflow as tf
 
+from utils import prepare_classes_list_and_table
+
 
 def parse_example(example_proto):
     features = {
@@ -43,29 +45,6 @@ def extract_video(parsed_example, dataset_name='ucf-101'):
     clip = tf.reshape(clip, (16, 112, 112, 3))
 
     return clip
-
-
-def prepare_classes_list_and_table(dataset_address, actions_include=None, actions_exclude=None):
-    classes_list = sorted(os.listdir(dataset_address))
-    should_be_removed_actions = []
-
-    if actions_include is not None:
-        for action in classes_list:
-            if action not in actions_include:
-                should_be_removed_actions.append(action)
-
-    if actions_exclude is not None:
-        for action in actions_exclude:
-            should_be_removed_actions.append(action)
-
-    for action in should_be_removed_actions:
-        if action in classes_list:
-            classes_list.remove(action)
-
-    mapping_strings = tf.constant(classes_list)
-    table = tf.contrib.lookup.index_table_from_tensor(mapping=mapping_strings, num_oov_buckets=0, default_value=-1)
-
-    return classes_list, table
 
 
 def get_action_tf_dataset(
