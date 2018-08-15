@@ -3,7 +3,8 @@ import random
 
 import tensorflow as tf
 
-from datasets.omniglot_dataset import get_omniglot_tf_record_dataset
+from datasets.omniglot_dataset import get_omniglot_tf_record_dataset, \
+    create_k_sample_per_action_iterative_omniglot_dataset
 from datasets.tf_datasets import create_ucf101_data_feed_for_k_sample_per_action_iterative_dataset, \
     create_data_feed_for_train, create_diva_data_feed_for_k_sample_per_action_iterative_dataset_unique_class_each_batch
 from models import ModelAgnosticMetaLearning, C3DNetwork, NeuralNetwork
@@ -56,12 +57,14 @@ def initialize():
 
     if META_TRAIN:
         if DATASET == 'omniglot':
-            input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, table = \
-                get_omniglot_tf_record_dataset(
-                    num_classes=N,
-                    num_samples_per_class=K,
-                    meta_batch_size=1,
-                )
+            with tf.variable_scope('data_reader'):
+                input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, table = \
+                    get_omniglot_tf_record_dataset(
+                        num_classes=N,
+                        num_samples_per_class=K,
+                        meta_batch_size=1,
+                    )
+
         else:
             input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
                 base_address=base_address,
@@ -85,7 +88,7 @@ def initialize():
                 )
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
-        else:
+        elif DATASET == 'diva':
             # input_data_ph, input_labels_ph, iterator = create_diva_data_feed_for_k_sample_per_action_iterative_dataset(
             #     dataset_address=base_address,
             #     k=K,
@@ -96,6 +99,15 @@ def initialize():
                     dataset_address=base_address,
                     actions_include=None
                 )
+
+            val_data_ph = input_data_ph
+            val_labels_ph = input_labels_ph
+        else:
+            input_data_ph, input_labels_ph, iterator, table = create_k_sample_per_action_iterative_omniglot_dataset(
+                base_address,
+                K,
+                batch_size=BATCH_SIZE * NUM_GPUS
+            )
 
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
@@ -112,7 +124,8 @@ def initialize():
         meta_learn_rate=META_LEARNING_RATE,
         learning_rate=LEARNING_RATE,
         log_device_placement=False,
-        num_classes=N
+        num_classes=N,
+        debug=False,
     )
 
     maml.sess.run(tf.tables_initializer())
@@ -120,11 +133,11 @@ def initialize():
     if not META_TRAIN:
         print(maml.sess.run(table.export()))
 
-    return maml
+    return maml, os.path.join(settings.SAVED_MODELS_ADDRESS, model_dir)
 
 
 if __name__ == '__main__':
-    maml = initialize()
+    maml, loading_dir = initialize()
     if META_TRAIN:
         # maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
@@ -133,5 +146,5 @@ if __name__ == '__main__':
             save_after_x_step=SAVE_AFTER_STEP
         )
     else:
-        maml.load_model(META_TEST_STARTING_MODEL)
+        maml.load_model(os.path.join(loading_dir, META_TEST_STARTING_MODEL))
         maml.meta_test(NUM_META_TEST_ITERATIONS, save_model_per_x_iterations=SAVE_AFTER_META_TEST_STEP)

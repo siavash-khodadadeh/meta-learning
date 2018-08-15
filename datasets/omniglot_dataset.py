@@ -62,6 +62,7 @@ def get_omniglot_tf_record_dataset(num_classes, num_samples_per_class, meta_batc
         parsed_example = tf.parse_single_example(example_proto, features)
         decoded_data = tf.decode_raw(parsed_example['data'], tf.float32)
         decoded_data = tf.reshape(decoded_data, shape=(28, 28))
+        decoded_data = 1 - decoded_data
         return decoded_data, table.lookup(parsed_example['task'])
 
     characters = [
@@ -101,29 +102,73 @@ def get_omniglot_tf_record_dataset(num_classes, num_samples_per_class, meta_batc
         classes = tf.one_hot(classes, depth=len(characters))
 
     train_data = combine_first_two_axes(data[:, ::2, ...])
-    train_data = tf.reshape(train_data, (-1, 28, 28, 1))
-    validation_data = combine_first_two_axes(data[:, 1::2, ...])
-    validation_data = tf.reshape(validation_data, (-1, 28, 28, 1))
-
+    train_data = tf.reshape(train_data, (num_classes * num_samples_per_class * meta_batch_size, 28, 28, 1))
     train_classes = combine_first_two_axes(classes[:, ::2, ...])
+    train_indices = tf.random_shuffle(tf.range(num_classes * num_samples_per_class * meta_batch_size))
+    train_data = tf.gather(train_data, train_indices)
+    train_classes = tf.gather(train_classes, train_indices)
+
+    validation_data = combine_first_two_axes(data[:, 1::2, ...])
+    validation_data = tf.reshape(validation_data, (num_classes * num_samples_per_class * meta_batch_size, 28, 28, 1))
     validation_classes = combine_first_two_axes(classes[:, 1::2, ...])
-
-    with tf.variable_scope('train_data'):
-        tf.summary.image('train', train_data, max_outputs=25)
-
-    with tf.variable_scope('validation_data'):
-        tf.summary.image('validation', validation_data, max_outputs=25)
+    validation_indices = tf.random_shuffle(tf.range(num_classes * num_samples_per_class * meta_batch_size))
+    validation_data = tf.gather(validation_data, validation_indices)
+    validation_classes = tf.gather(validation_classes, validation_indices)
 
     return train_data, train_classes, validation_data, validation_classes, iterator, table
 
+
+def create_k_sample_per_action_iterative_omniglot_dataset(
+        dataset_address,
+        k,
+        batch_size,
+):
+    characters, table = prepare_classes_list_and_table(
+        settings.OMNIGLOT_TF_RECORD_ADDRESS,
+        actions_include=None,
+        actions_exclude=None
+    )
+
+    def _parse_example(example_proto):
+        features = {
+            'task': tf.FixedLenFeature([], tf.string),
+            'data': tf.FixedLenFeature([], tf.string),
+        }
+        parsed_example = tf.parse_single_example(example_proto, features)
+        decoded_data = tf.decode_raw(parsed_example['data'], tf.float32)
+        decoded_data = tf.reshape(decoded_data, shape=(28, 28))
+        decoded_data = 1 - decoded_data
+        return decoded_data, table.lookup(parsed_example['task'])
+
+    characters = [os.path.join(settings.OMNIGLOT_TF_RECORD_ADDRESS, character) for character in characters]
+
+    examples = list()
+    for class_directory in characters:
+        sample_addresses = os.listdir(os.path.join(dataset_address, class_directory))[:k]
+        for video_address in sample_addresses:
+            examples.append(os.path.join(dataset_address, class_directory, video_address))
+
+    dataset = tf.data.TFRecordDataset(examples).shuffle(100).repeat(-1)
+    dataset = dataset.map(_parse_example)
+    dataset = dataset.batch(batch_size)
+
+    iterator = dataset.make_initializable_iterator()
+    input_data_ph, input_labels_ph = iterator.get_next()
+
+    input_data_ph = tf.reshape(input_data_ph, (-1, 28, 28, 1))
+    input_labels_ph = tf.eye(5)
+
+    return input_data_ph, input_labels_ph, iterator, table
+
+
 if __name__ == '__main__':
     # create_tf_records()
-    image_tr, label_tr, image_va, label_va, iter, tble = get_omniglot_tf_record_dataset(5, 5, 25, real_labels=False)
+    image_tr, label_tr, image_va, label_va, iter, tble = get_omniglot_tf_record_dataset(5, 5, 1, real_labels=False)
+
     with tf.Session() as sess:
         sess.run(iter.initializer)
         sess.run(tf.initialize_all_tables())
         for step in range(int(1624 / 5)):
-            print(step)
             image_np_tr, label_np_tr, image_np_va, label_np_va = sess.run((image_tr, label_tr, image_va, label_va))
             print('\nbatch samples: \n')
             print('tr')
