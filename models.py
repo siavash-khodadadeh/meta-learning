@@ -1,9 +1,10 @@
 import os
 
 import tensorflow as tf
+from tensorflow.contrib.layers.python.layers import batch_norm as batch_norm_layer
 from tensorflow.python import debug as tf_debug
 
-from meta_layers import conv2d, dense, conv3d
+from meta_layers import conv2d, dense, conv3d, batch_normalization
 from utils import average_gradients
 
 
@@ -15,9 +16,12 @@ class NeuralNetwork(object):
                 64,
                 kernel_size=(3, 3),
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv1',
             )
+            self.conv1 = tf.layers.batch_normalization(self.conv1, name='batch_norm1', scale=False, momentum=0.999, training=True)
+            self.conv1 = tf.nn.relu(self.conv1)
             self.maxpool1 = tf.layers.max_pooling2d(self.conv1, pool_size=(2, 2), strides=(1, 1))
 
             self.conv2 = tf.layers.conv2d(
@@ -25,9 +29,12 @@ class NeuralNetwork(object):
                 64,
                 kernel_size=(3, 3),
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv2',
             )
+            self.conv2 = tf.layers.batch_normalization(self.conv2, name='batch_norm2', scale=False, momentum=0.999, training=True)
+            self.conv2 = tf.nn.relu(self.conv2)
             self.maxpool2 = tf.layers.max_pooling2d(self.conv2, pool_size=(2, 2), strides=(1, 1))
 
             self.conv3 = tf.layers.conv2d(
@@ -35,9 +42,12 @@ class NeuralNetwork(object):
                 64,
                 kernel_size=(3, 3),
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv3',
             )
+            self.conv3 = tf.layers.batch_normalization(self.conv3, name='batch_norm3', scale=False, momentum=0.999, training=True)
+            self.conv3 = tf.nn.relu(self.conv3)
             self.maxpool3 = tf.layers.max_pooling2d(self.conv3, pool_size=(2, 2), strides=(1, 1))
 
             self.conv4 = tf.layers.conv2d(
@@ -45,9 +55,12 @@ class NeuralNetwork(object):
                 64,
                 kernel_size=(3, 3),
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv4',
             )
+            self.conv4 = tf.layers.batch_normalization(self.conv4, name='batch_norm4', scale=False, momentum=0.999, training=True)
+            self.conv4 = tf.nn.relu(self.conv4)
             self.maxpool4 = tf.layers.max_pooling2d(self.conv4, pool_size=(2, 2), strides=(1, 1))
 
             self.flatten = tf.layers.flatten(self.maxpool4)
@@ -59,9 +72,18 @@ class NeuralNetwork(object):
                 weights=weights['conv1/kernel:0'],
                 bias=weights['conv1/bias:0'],
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv1'
             )
+            self.conv1 = batch_normalization(
+                self.conv1,
+                mean=weights['batch_norm1/moving_mean:0'],
+                variance=weights['batch_norm1/moving_variance:0'],
+                offset=weights['batch_norm1/beta:0'],
+                name='batch_norm1',
+            )
+            self.conv1 = tf.nn.relu(self.conv1)
             self.maxpool1 = tf.layers.max_pooling2d(self.conv1, pool_size=(2, 2), strides=(1, 1))
 
             self.conv2 = conv2d(
@@ -69,9 +91,18 @@ class NeuralNetwork(object):
                 weights=weights['conv2/kernel:0'],
                 bias=weights['conv2/bias:0'],
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv2'
             )
+            self.conv2 = batch_normalization(
+                self.conv2,
+                mean=weights['batch_norm2/moving_mean:0'],
+                variance=weights['batch_norm2/moving_variance:0'],
+                offset=weights['batch_norm2/beta:0'],
+                name='batch_norm2',
+            )
+            self.conv2 = tf.nn.relu(self.conv2)
             self.maxpool2 = tf.layers.max_pooling2d(self.conv2, pool_size=(2, 2), strides=(1, 1))
 
             self.conv3 = conv2d(
@@ -79,9 +110,18 @@ class NeuralNetwork(object):
                 weights=weights['conv3/kernel:0'],
                 bias=weights['conv3/bias:0'],
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv3'
             )
+            self.conv3 = batch_normalization(
+                self.conv3,
+                mean=weights['batch_norm3/moving_mean:0'],
+                variance=weights['batch_norm3/moving_variance:0'],
+                offset=weights['batch_norm3/beta:0'],
+                name='batch_norm3',
+            )
+            self.conv3 = tf.nn.relu(self.conv3)
             self.maxpool3 = tf.layers.max_pooling2d(self.conv3, pool_size=(2, 2), strides=(1, 1))
 
             self.conv4 = conv2d(
@@ -89,9 +129,18 @@ class NeuralNetwork(object):
                 weights=weights['conv4/kernel:0'],
                 bias=weights['conv4/bias:0'],
                 strides=(1, 1),
-                activation=tf.nn.relu,
+                activation=None,
+                padding='VALID',
                 name='conv4'
             )
+            self.conv4 = batch_normalization(
+                self.conv4,
+                mean=weights['batch_norm4/moving_mean:0'],
+                variance=weights['batch_norm4/moving_variance:0'],
+                offset=weights['batch_norm4/beta:0'],
+                name='batch_norm4',
+            )
+            self.conv4 = tf.nn.relu(self.conv4)
             self.maxpool4 = tf.layers.max_pooling2d(self.conv4, pool_size=(2, 2), strides=(1, 1))
 
             self.flatten = tf.layers.flatten(self.maxpool4)
@@ -312,8 +361,8 @@ class ModelAgnosticMetaLearning(object):
             input_validation_labels_ph,
             log_dir,
             saving_path,
-            meta_learn_rate=0.00001,
-            learning_rate=0.0001,
+            meta_learn_rate=0.001,
+            learning_rate=0.1,
             num_gpu_devices=None,
             debug=False,
             log_device_placement=True,
@@ -322,7 +371,8 @@ class ModelAgnosticMetaLearning(object):
         self.devices = self._get_gpu_devices(num_gpu_devices)
         self.num_gpu_devices = len(self.devices)
         self.model_cls = model_cls
-        self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
+        # self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
+        self.meta_learn_rate = meta_learn_rate
         self.learning_rate = learning_rate
         self.num_classes = num_classes
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
@@ -343,12 +393,17 @@ class ModelAgnosticMetaLearning(object):
         self.input_validation = input_validation_ph
         self.input_validation_labels = input_validation_labels_ph
 
-        self.grads, self.inner_loss = self._create_inner_model_part(self.input_data, self.input_labels)
+        self.grads_and_vars, self.inner_loss = self._create_inner_model_part(self.input_data, self.input_labels)
         self.inner_train_op = self._define_inner_train_op(self.inner_loss)
 
-        # grads_stopped = [(tf.stop_gradient(grad_and_var[0]), grad_and_var[1]) for grad_and_var in self.grads]
+        # grads_stopped = []
+        # for grad_and_var in self.grads:
+        #     if grad_and_var[0] is not None:
+        #         grads_stopped.append((tf.stop_gradient(grad_and_var[0]), grad_and_var[1]))
+        #     else:
+        #         grads_stopped.append((grad_and_var[0], grad_and_var[1]))
 
-        updated_vars = self._compute_updated_vars(self.grads)
+        updated_vars = self._compute_updated_vars(self.grads_and_vars)
         self.meta_loss = self._create_meta_part(
             self.input_validation,
             self.input_validation_labels,
@@ -356,7 +411,7 @@ class ModelAgnosticMetaLearning(object):
         )
 
         with tf.variable_scope('meta_optimizer'):
-            self.train_op = self.meta_optimizer.minimize(self.meta_loss, var_list=self.model_variables)
+            self.train_op = self.meta_optimizer.minimize(self.meta_loss)
 
         # with tf.variable_scope('train_data'):
         #     tf.summary.image('train', self.input_data, max_outputs=25)
@@ -391,6 +446,9 @@ class ModelAgnosticMetaLearning(object):
                 updated_vars[grad_info[1].name[6:]] = grad_info[1]
 
             # self.inner_train_ops.append(tf.assign(grad_info[1], updated_vars[grad_info[1].name[6:]]))
+        for var in self.model_scope_variables:
+            if var.name[6:] not in updated_vars.keys():
+                updated_vars[var.name[6:]] = var
         return updated_vars
 
     def _define_inner_train_op(self, loss):
@@ -442,9 +500,9 @@ class ModelAgnosticMetaLearning(object):
 
     def meta_train(self, num_iterations, report_after_x_step, save_after_x_step):
         for it in range(num_iterations):
-            img, lbl, val_img, val_lbl = self.sess.run(
-                (self.input_data, self.input_labels, self.input_validation, self.input_validation_labels)
-            )
+            # img, lbl, val_img, val_lbl = self.sess.run(
+            #     (self.input_data, self.input_labels, self.input_validation, self.input_validation_labels)
+            # )
 
             # if it % 100 == 0:
             #     import matplotlib.pyplot as plt
@@ -456,26 +514,21 @@ class ModelAgnosticMetaLearning(object):
             #         axes[1, i].set_title(val_lbl[i, ...])
             #     plt.show()
 
-            feed_dict = {
-                self.input_data: img,
-                self.input_labels: lbl,
-                self.input_validation: val_img,
-                self.input_validation_labels: val_lbl,
-            }
+            # feed_dict = {
+            #     self.input_data: img,
+            #     self.input_labels: lbl,
+            #     self.input_validation: val_img,
+            #     self.input_validation_labels: val_lbl,
+            # }
 
             inner_loss_value, meta_loss_value, merged_summary, _ = self.sess.run(
                 (self.inner_loss, self.meta_loss, self.merged, self.train_op),
-                feed_dict=feed_dict
             )
 
             if it % report_after_x_step == 0:
                 self.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
-                print('inner loss value:')
-                print(inner_loss_value)
-                print('meta loss value:')
-                print(meta_loss_value)
-
+                print('Loss value: ({}, {})'.format(inner_loss_value, meta_loss_value))
 
             if it % save_after_x_step == 0 and it != 0:
                 self.save_model(path=self.saving_path, step=it)
@@ -522,23 +575,39 @@ class ModelAgnosticMetaLearning(object):
         with tf.variable_scope('model'):
             self.model = self._create_model(input_data)
             model_out_train = self.model.output
-            self.model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
+            self.model_scope_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
+            batch_norm_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model/batch_norm')
+            self.model_variables = []
+            for var in self.model_scope_variables:
+                if var not in batch_norm_variables:
+                    self.model_variables.append(var)
 
         with tf.variable_scope('loss'):
             train_loss = self.loss_function(input_labels, model_out_train)
             tf.summary.scalar('train_loss', train_loss)
 
         with tf.variable_scope('gradients'):
-            grads = self._compute_inner_gradients(train_loss)
+            grads_and_vars = self._compute_inner_gradients(train_loss)
 
-        return grads, train_loss
+        return grads_and_vars, train_loss
 
     def _compute_inner_gradients(self, train_loss):
-        grads = self.optimizer.compute_gradients(
-            train_loss,
-            var_list=self.model_variables,
-        )
-        return grads
+        grads = tf.gradients(train_loss, self.model_variables)
+        stop_grads = []
+        for grad in grads:
+            if grad is not None:
+                stop_grads.append(tf.stop_gradient(grad))
+            else:
+                stop_grads.append(grad)
+
+        grads_and_vars = {
+            (grad, var) for grad, var in zip(stop_grads, self.model_variables)
+        }
+        # grads_and_vars = self.optimizer.compute_gradients(
+        #     train_loss,
+        #     var_list=self.model_variables,
+        # )
+        return grads_and_vars
 
     def _create_meta_part(self, input_validation, input_validation_labels, updated_vars):
         with tf.variable_scope('updated_model'):

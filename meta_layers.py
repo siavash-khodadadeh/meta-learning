@@ -35,3 +35,26 @@ def dense(input_layer, weights, bias, activation, name=None):
         if activation is not None:
             return activation(dense_out)
         return dense_out
+
+
+def batch_normalization(input_layer, mean, variance, offset, name=None):
+    # from tensorflow.python.ops import math_ops
+    # from tensorflow.python.ops import state_ops
+    # from tensorflow.python.framework import ops
+
+    # def do_update(variable, value, momentum):
+    #     with ops.name_scope(None, 'AssignMovingAvg', [variable, value, momentum]) as scope:
+    #         with ops.colocate_with(variable):
+    #             decay = ops.convert_to_tensor(1.0 - momentum, name='decay')
+    #             if decay.dtype != variable.dtype.base_dtype:
+    #                 decay = math_ops.cast(decay, variable.dtype.base_dtype)
+    #             update_delta = (variable - value) * decay
+    #             return state_ops.assign_sub(variable, update_delta, name=scope)
+
+    with tf.variable_scope(name):
+        # new_mean = math_ops.reduce_mean(mean, axis=1, keepdims=True)
+        # new_variance = math_ops.reduce_mean(variance, axis=1, keepdims=True)
+        #
+        # do_update(mean, new_mean, momentum=0.999)
+        # do_update(variance, new_variance, momentum=0.999)
+        return tf.nn.batch_normalization(input_layer, mean, variance, offset, scale=None, variance_epsilon=1e-3)

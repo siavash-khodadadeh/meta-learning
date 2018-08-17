@@ -4,7 +4,6 @@ import numpy as np
 
 import settings
 from datasets.data_generator import DataGenerator
-from datasets.omniglot_dataset import get_omniglot_tf_record_dataset
 from models import ModelAgnosticMetaLearning, NeuralNetwork
 
 LOG_DIR = settings.BASE_LOG_ADDRESS + '/omniglot/'
