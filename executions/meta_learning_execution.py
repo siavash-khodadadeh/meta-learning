@@ -113,7 +113,7 @@ def initialize():
             val_labels_ph = input_labels_ph
 
     maml = ModelAgnosticMetaLearning(
-        NeuralNetwork,
+        C3DNetwork,
         input_data_ph,
         input_labels_ph,
         val_data_ph,

@@ -1,4 +1,5 @@
 import os
+import sys
 
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import batch_norm as batch_norm_layer
@@ -20,8 +21,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv1',
             )
-            self.conv1 = tf.layers.batch_normalization(self.conv1, name='batch_norm1', scale=False, momentum=0.999, training=True)
-            self.conv1 = tf.nn.relu(self.conv1)
+            self.conv1 = batch_norm_layer(self.conv1, activation_fn=tf.nn.relu, scope='batch_norm1')
             self.maxpool1 = tf.layers.max_pooling2d(self.conv1, pool_size=(2, 2), strides=(1, 1))
 
             self.conv2 = tf.layers.conv2d(
@@ -33,8 +33,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv2',
             )
-            self.conv2 = tf.layers.batch_normalization(self.conv2, name='batch_norm2', scale=False, momentum=0.999, training=True)
-            self.conv2 = tf.nn.relu(self.conv2)
+            self.conv2 = batch_norm_layer(self.conv2, activation_fn=tf.nn.relu, scope='batch_norm2')
             self.maxpool2 = tf.layers.max_pooling2d(self.conv2, pool_size=(2, 2), strides=(1, 1))
 
             self.conv3 = tf.layers.conv2d(
@@ -46,8 +45,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv3',
             )
-            self.conv3 = tf.layers.batch_normalization(self.conv3, name='batch_norm3', scale=False, momentum=0.999, training=True)
-            self.conv3 = tf.nn.relu(self.conv3)
+            self.conv3 = batch_norm_layer(self.conv3, activation_fn=tf.nn.relu, scope='batch_norm3')
             self.maxpool3 = tf.layers.max_pooling2d(self.conv3, pool_size=(2, 2), strides=(1, 1))
 
             self.conv4 = tf.layers.conv2d(
@@ -59,8 +57,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv4',
             )
-            self.conv4 = tf.layers.batch_normalization(self.conv4, name='batch_norm4', scale=False, momentum=0.999, training=True)
-            self.conv4 = tf.nn.relu(self.conv4)
+            self.conv4 = batch_norm_layer(self.conv4, activation_fn=tf.nn.relu, scope='batch_norm4')
             self.maxpool4 = tf.layers.max_pooling2d(self.conv4, pool_size=(2, 2), strides=(1, 1))
 
             self.flatten = tf.layers.flatten(self.maxpool4)
@@ -76,14 +73,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv1'
             )
-            self.conv1 = batch_normalization(
-                self.conv1,
-                mean=weights['batch_norm1/moving_mean:0'],
-                variance=weights['batch_norm1/moving_variance:0'],
-                offset=weights['batch_norm1/beta:0'],
-                name='batch_norm1',
-            )
-            self.conv1 = tf.nn.relu(self.conv1)
+            self.conv1 = batch_norm_layer(self.conv1, activation_fn=tf.nn.relu, scope='batch_norm1')
             self.maxpool1 = tf.layers.max_pooling2d(self.conv1, pool_size=(2, 2), strides=(1, 1))
 
             self.conv2 = conv2d(
@@ -95,14 +85,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv2'
             )
-            self.conv2 = batch_normalization(
-                self.conv2,
-                mean=weights['batch_norm2/moving_mean:0'],
-                variance=weights['batch_norm2/moving_variance:0'],
-                offset=weights['batch_norm2/beta:0'],
-                name='batch_norm2',
-            )
-            self.conv2 = tf.nn.relu(self.conv2)
+            self.conv2 = batch_norm_layer(self.conv2, activation_fn=tf.nn.relu, scope='batch_norm2')
             self.maxpool2 = tf.layers.max_pooling2d(self.conv2, pool_size=(2, 2), strides=(1, 1))
 
             self.conv3 = conv2d(
@@ -114,14 +97,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv3'
             )
-            self.conv3 = batch_normalization(
-                self.conv3,
-                mean=weights['batch_norm3/moving_mean:0'],
-                variance=weights['batch_norm3/moving_variance:0'],
-                offset=weights['batch_norm3/beta:0'],
-                name='batch_norm3',
-            )
-            self.conv3 = tf.nn.relu(self.conv3)
+            self.conv3 = batch_norm_layer(self.conv3, activation_fn=tf.nn.relu, scope='batch_norm3')
             self.maxpool3 = tf.layers.max_pooling2d(self.conv3, pool_size=(2, 2), strides=(1, 1))
 
             self.conv4 = conv2d(
@@ -133,14 +109,7 @@ class NeuralNetwork(object):
                 padding='VALID',
                 name='conv4'
             )
-            self.conv4 = batch_normalization(
-                self.conv4,
-                mean=weights['batch_norm4/moving_mean:0'],
-                variance=weights['batch_norm4/moving_variance:0'],
-                offset=weights['batch_norm4/beta:0'],
-                name='batch_norm4',
-            )
-            self.conv4 = tf.nn.relu(self.conv4)
+            self.conv4 = batch_norm_layer(self.conv4, activation_fn=tf.nn.relu, scope='batch_norm4')
             self.maxpool4 = tf.layers.max_pooling2d(self.conv4, pool_size=(2, 2), strides=(1, 1))
 
             self.flatten = tf.layers.flatten(self.maxpool4)
@@ -164,10 +133,11 @@ class C3DNetwork(object):
                 64,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv1',
             )
+            self.conv1 = batch_norm_layer(self.conv1, activation_fn=tf.nn.relu, scope='batch_norm1')
             self.maxpool1 = tf.layers.max_pooling3d(self.conv1, pool_size=(1, 2, 2), strides=(1, 2, 2), padding='SAME')
 
             self.conv2 = tf.layers.conv3d(
@@ -175,10 +145,11 @@ class C3DNetwork(object):
                 128,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv2',
             )
+            self.conv2 = batch_norm_layer(self.conv2, activation_fn=tf.nn.relu, scope='batch_norm2')
             self.maxpool2 = tf.layers.max_pooling3d(self.conv2, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.conv3a = tf.layers.conv3d(
@@ -186,19 +157,21 @@ class C3DNetwork(object):
                 256,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv3a',
             )
+            self.conv3a = batch_norm_layer(self.conv3a, activation_fn=tf.nn.relu, scope='batch_norm3a')
             self.conv3b = tf.layers.conv3d(
                 self.conv3a,
                 256,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv3b',
             )
+            self.conv3b = batch_norm_layer(self.conv3b, activation_fn=tf.nn.relu, scope='batch_norm3b')
             self.maxpool3 = tf.layers.max_pooling3d(self.conv3b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.conv4a = tf.layers.conv3d(
@@ -206,19 +179,21 @@ class C3DNetwork(object):
                 512,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv4a',
             )
+            self.conv4a = batch_norm_layer(self.conv4a, activation_fn=tf.nn.relu, scope='batch_norm4a')
             self.conv4b = tf.layers.conv3d(
                 self.conv4a,
                 512,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv4b',
             )
+            self.conv4b = batch_norm_layer(self.conv4b, activation_fn=tf.nn.relu, scope='batch_norm4b')
             self.maxpool4 = tf.layers.max_pooling3d(self.conv4b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.conv5a = tf.layers.conv3d(
@@ -226,25 +201,29 @@ class C3DNetwork(object):
                 512,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv5a',
             )
+            self.conv5a = batch_norm_layer(self.conv5a, activation_fn=tf.nn.relu, scope='batch_norm5a')
             self.conv5b = tf.layers.conv3d(
                 self.conv5a,
                 512,
                 kernel_size=(3, 3, 3),
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv5b',
             )
+            self.conv5b = batch_norm_layer(self.conv5b, activation_fn=tf.nn.relu, scope='batch_norm5b')
             self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.transpose = tf.transpose(self.maxpool5, (0, 1, 4, 2, 3))
             self.flatten = tf.layers.flatten(self.transpose)
             self.dense = tf.layers.dense(self.flatten, 4096, activation=tf.nn.relu, name='dense1')
+            self.dense = batch_norm_layer(self.dense, activation_fn=tf.nn.relu, scope='batch_norm_dense1')
             self.dense2 = tf.layers.dense(self.dense, 4096, activation=tf.nn.relu, name='dense2')
+            self.dense2 = batch_norm_layer(self.dense2, activation_fn=tf.nn.relu, scope='batch_norm_dense2')
             self.output = tf.layers.dense(self.dense2, num_classes, activation=None, name='dense3')
         else:
             self.conv1 = conv3d(
@@ -252,30 +231,33 @@ class C3DNetwork(object):
                 weights=weights['conv1/kernel:0'],
                 bias=weights['conv1/bias:0'],
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv1'
             )
+            self.conv1 = batch_norm_layer(self.conv1, activation_fn=tf.nn.relu, scope='batch_norm1')
             self.maxpool1 = tf.layers.max_pooling3d(self.conv1, pool_size=(1, 2, 2), strides=(1, 2, 2))
             self.conv2 = conv3d(
                 self.maxpool1,
                 weights=weights['conv2/kernel:0'],
                 bias=weights['conv2/bias:0'],
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv2'
             )
+            self.conv2 = batch_norm_layer(self.conv2, activation_fn=tf.nn.relu, scope='batch_norm2')
             self.maxpool2 = tf.layers.max_pooling3d(self.conv2, pool_size=(2, 2, 2), strides=(2, 2, 2))
             self.conv3a = conv3d(
                 self.maxpool2,
                 weights=weights['conv3a/kernel:0'],
                 bias=weights['conv3a/bias:0'],
                 strides=(1, 1, 1),
-                activation=tf.nn.relu,
+                activation=None,
                 padding='SAME',
                 name='conv3a'
             )
+            self.conv3a = batch_norm_layer(self.conv3a, activation_fn=tf.nn.relu, scope='batch_norm3a')
             self.conv3b = conv3d(
                 self.conv3a,
                 weights=weights['conv3b/kernel:0'],
@@ -285,6 +267,7 @@ class C3DNetwork(object):
                 padding='SAME',
                 name='conv3b'
             )
+            self.conv3b = batch_norm_layer(self.conv3b, activation_fn=tf.nn.relu, scope='batch_norm3b')
             self.maxpool3 = tf.layers.max_pooling3d(self.conv3b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.conv4a = conv3d(
@@ -296,6 +279,7 @@ class C3DNetwork(object):
                 padding='SAME',
                 name='conv4a'
             )
+            self.conv4a = batch_norm_layer(self.conv4a, activation_fn=tf.nn.relu, scope='batch_norm4a')
             self.conv4b = conv3d(
                 self.conv4a,
                 weights=weights['conv4b/kernel:0'],
@@ -305,6 +289,7 @@ class C3DNetwork(object):
                 padding='SAME',
                 name='conv4b'
             )
+            self.conv4b = batch_norm_layer(self.conv4b, activation_fn=tf.nn.relu, scope='batch_norm4b')
             self.maxpool4 = tf.layers.max_pooling3d(self.conv4b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
             self.conv5a = conv3d(
                 self.maxpool4,
@@ -315,6 +300,7 @@ class C3DNetwork(object):
                 padding='SAME',
                 name='conv5a'
             )
+            self.conv5a = batch_norm_layer(self.conv5a, activation_fn=tf.nn.relu, scope='batch_norm5a')
             self.conv5b = conv3d(
                 self.conv5a,
                 weights=weights['conv5b/kernel:0'],
@@ -324,6 +310,7 @@ class C3DNetwork(object):
                 padding='SAME',
                 name='conv5b'
             )
+            self.conv5b = batch_norm_layer(self.conv5b, activation_fn=tf.nn.relu, scope='batch_norm5b')
             self.maxpool5 = tf.layers.max_pooling3d(self.conv5b, pool_size=(2, 2, 2), strides=(2, 2, 2), padding='SAME')
 
             self.transpose = tf.transpose(self.maxpool5, (0, 1, 4, 2, 3))
@@ -335,6 +322,7 @@ class C3DNetwork(object):
                 activation=tf.nn.relu,
                 name='dense1'
             )
+            self.dense = batch_norm_layer(self.dense, activation_fn=tf.nn.relu, scope='batch_norm_dense1')
             self.dense2 = dense(
                 self.dense,
                 weights=weights['dense2/kernel:0'],
@@ -342,6 +330,7 @@ class C3DNetwork(object):
                 activation=tf.nn.relu,
                 name='dense2'
             )
+            self.dense2 = batch_norm_layer(self.dense2, activation_fn=tf.nn.relu, scope='batch_norm_dense2')
             self.output = dense(
                 self.dense2,
                 weights=weights['dense3/kernel:0'],
@@ -529,6 +518,7 @@ class ModelAgnosticMetaLearning(object):
                 self.file_writer.add_summary(merged_summary, global_step=it)
                 print(it)
                 print('Loss value: ({}, {})'.format(inner_loss_value, meta_loss_value))
+                sys.stdout.flush()
 
             if it % save_after_x_step == 0 and it != 0:
                 self.save_model(path=self.saving_path, step=it)
@@ -610,7 +600,7 @@ class ModelAgnosticMetaLearning(object):
         return grads_and_vars
 
     def _create_meta_part(self, input_validation, input_validation_labels, updated_vars):
-        with tf.variable_scope('updated_model'):
+        with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
             updated_model = self.model_cls(input_validation, weights=updated_vars)
             model_out_validation = updated_model.output
 
