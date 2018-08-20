@@ -2,10 +2,10 @@ import os
 import sys
 
 import tensorflow as tf
-from tensorflow.contrib.layers.python.layers import batch_norm as batch_norm_layer
+
 from tensorflow.python import debug as tf_debug
 
-from meta_layers import conv2d, dense, conv3d, batch_normalization
+from meta_layers import conv2d, dense, conv3d, batch_norm_layer
 from utils import average_gradients
 
 
@@ -353,6 +353,7 @@ class ModelAgnosticMetaLearning(object):
             meta_learn_rate=0.001,
             learning_rate=0.1,
             num_gpu_devices=None,
+            first_order_approximation=False,
             debug=False,
             log_device_placement=True,
             num_classes=None,
@@ -363,6 +364,7 @@ class ModelAgnosticMetaLearning(object):
         # self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
         self.meta_learn_rate = meta_learn_rate
         self.learning_rate = learning_rate
+        self.stop_grads = first_order_approximation
         self.num_classes = num_classes
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         self.meta_optimizer = tf.train.AdamOptimizer(learning_rate=self.meta_learn_rate)
@@ -610,8 +612,7 @@ class ModelAgnosticMetaLearning(object):
 
         return grads_and_vars, train_loss
 
-    def _compute_inner_gradients(self, train_loss):
-        grads = tf.gradients(train_loss, self.model_variables)
+    def _stop_grads(self, grads):
         stop_grads = []
         for grad in grads:
             if grad is not None:
@@ -619,11 +620,16 @@ class ModelAgnosticMetaLearning(object):
             else:
                 stop_grads.append(grad)
 
-        grads_and_vars = [(grad, var) for grad, var in zip(stop_grads, self.model_variables)]
-        # grads_and_vars = self.optimizer.compute_gradients(
-        #     train_loss,
-        #     var_list=self.model_variables,
-        # )
+        return stop_grads
+
+    def _compute_inner_gradients(self, train_loss):
+        grads = tf.gradients(train_loss, self.model_variables)
+
+        if self.stop_grads:
+            grads = self._stop_grads(grads)
+
+        grads_and_vars = [(grad, var) for grad, var in zip(grads, self.model_variables)]
+
         return grads_and_vars
 
     def _create_meta_part(self, input_validation, input_validation_labels, updated_vars):

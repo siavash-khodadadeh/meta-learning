@@ -12,7 +12,8 @@ import settings
 
 from experiment_settings import RANDOM_SEED, DATASET, N, K, BATCH_SIZE, NUM_GPUS, NUM_ITERATIONS, META_LEARNING_RATE, \
     LEARNING_RATE, META_TRAIN, test_actions, diva_test_actions, STARTING_POINT_MODEL_ADDRESS, REPORT_AFTER_STEP, \
-    SAVE_AFTER_STEP, META_TEST_STARTING_MODEL, NUM_META_TEST_ITERATIONS, SAVE_AFTER_META_TEST_STEP
+    SAVE_AFTER_STEP, META_TEST_STARTING_MODEL, NUM_META_TEST_ITERATIONS, SAVE_AFTER_META_TEST_STEP, \
+    FIRST_OREDER_APPROXIMATION, BATCH_NORMALIZATION
 
 
 def initialize():
@@ -29,6 +30,8 @@ def initialize():
         DATASET,
         'meta-train',
         'multiple-gpus',
+        ('with' if FIRST_OREDER_APPROXIMATION else 'without') + '-first-order-approximation',
+        ('with' if BATCH_NORMALIZATION else 'without') + '-batch-normalization',
         '{}-way-classifier'.format(N),
         '{}-shot'.format(K),
         'batch-size-{}'.format(BATCH_SIZE),
@@ -125,6 +128,7 @@ def initialize():
         meta_learn_rate=META_LEARNING_RATE,
         learning_rate=LEARNING_RATE,
         log_device_placement=False,
+        first_order_approximation=FIRST_OREDER_APPROXIMATION,
         num_classes=N,
         debug=False,
     )
