@@ -107,7 +107,6 @@ def create_data_feed_for_train(base_address, test_actions, batch_size, k, n, ran
             one_hot=False,
             actions_exclude=actions_exclude,
         )
-
         iterator = dataset.make_initializable_iterator()
         next_batch = iterator.get_next()
 

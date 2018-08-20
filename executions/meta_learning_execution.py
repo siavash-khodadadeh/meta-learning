@@ -56,24 +56,25 @@ def initialize():
         base_address = settings.KINETICS_TF_RECORDS_ADDRESS
 
     if META_TRAIN:
-        if DATASET == 'omniglot':
-            with tf.variable_scope('data_reader'):
-                input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, table = \
-                    get_omniglot_tf_record_dataset(
-                        num_classes=N,
-                        num_samples_per_class=K,
-                        meta_batch_size=1,
-                    )
+        with tf.device('/cpu:0'):
+            if DATASET == 'omniglot':
+                with tf.variable_scope('data_reader'):
+                    input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator, table = \
+                        get_omniglot_tf_record_dataset(
+                            num_classes=N,
+                            num_samples_per_class=K,
+                            meta_batch_size=1,
+                        )
 
-        else:
-            input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
-                base_address=base_address,
-                test_actions=execution_test_actions,
-                batch_size=BATCH_SIZE * NUM_GPUS,
-                k=K,
-                n=N,
-                random_labels=False
-            )
+            else:
+                input_data_ph, input_labels_ph, val_data_ph, val_labels_ph, iterator = create_data_feed_for_train(
+                    base_address=base_address,
+                    test_actions=execution_test_actions,
+                    batch_size=BATCH_SIZE * NUM_GPUS,
+                    k=K,
+                    n=N,
+                    random_labels=False
+                )
     else:
         if DATASET == 'ucf-101' or DATASET == 'kinetics':
             print("test actiosn: ")
@@ -139,7 +140,7 @@ def initialize():
 if __name__ == '__main__':
     maml, loading_dir = initialize()
     if META_TRAIN:
-        # maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
+        maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
             num_iterations=NUM_ITERATIONS + 1,
             report_after_x_step=REPORT_AFTER_STEP,

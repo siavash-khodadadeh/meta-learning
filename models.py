@@ -482,8 +482,7 @@ class ModelAgnosticMetaLearning(object):
 
     def load_model(self, path, load_last_layer=True):
         if not load_last_layer:
-            model_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
-            self.saver = tf.train.Saver(var_list=model_variables[:-2])
+            self.saver = tf.train.Saver(var_list=self.model_variables[:-2])
 
         self.saver.restore(self.sess, path)
 
