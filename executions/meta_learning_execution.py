@@ -144,7 +144,8 @@ def initialize():
 if __name__ == '__main__':
     maml, loading_dir = initialize()
     if META_TRAIN:
-        maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
+        if STARTING_POINT_MODEL_ADDRESS:
+            maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
             num_iterations=NUM_ITERATIONS + 1,
             report_after_x_step=REPORT_AFTER_STEP,

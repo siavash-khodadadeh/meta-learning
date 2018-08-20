@@ -430,7 +430,7 @@ class ModelAgnosticMetaLearning(object):
                     updated_vars
                 )
                 self.meta_losses.append(meta_loss)
-                meta_grad_and_vars = self.meta_optimizer.compute_gradients(meta_loss)
+                meta_grad_and_vars = self.meta_optimizer.compute_gradients(meta_loss, colocate_gradients_with_ops=True)
                 self.meta_grads_and_vars.append(meta_grad_and_vars)
 
         tf.summary.scalar(
@@ -623,7 +623,7 @@ class ModelAgnosticMetaLearning(object):
         return stop_grads
 
     def _compute_inner_gradients(self, train_loss):
-        grads = tf.gradients(train_loss, self.model_variables)
+        grads = tf.gradients(train_loss, self.model_variables, colocate_gradients_with_ops=True)
 
         if self.stop_grads:
             grads = self._stop_grads(grads)
