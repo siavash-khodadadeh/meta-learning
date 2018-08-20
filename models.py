@@ -591,7 +591,7 @@ class ModelAgnosticMetaLearning(object):
         return self.model_cls(input_data, num_classes=self.num_classes)
 
     def _create_inner_model_part(self, input_data, input_labels):
-        with tf.variable_scope('model'):
+        with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
             self.model = self._create_model(input_data)
             model_out_train = self.model.output
             self.model_scope_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')
@@ -619,9 +619,7 @@ class ModelAgnosticMetaLearning(object):
             else:
                 stop_grads.append(grad)
 
-        grads_and_vars = {
-            (grad, var) for grad, var in zip(stop_grads, self.model_variables)
-        }
+        grads_and_vars = [(grad, var) for grad, var in zip(stop_grads, self.model_variables)]
         # grads_and_vars = self.optimizer.compute_gradients(
         #     train_loss,
         #     var_list=self.model_variables,
