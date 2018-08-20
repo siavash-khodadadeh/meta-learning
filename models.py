@@ -377,36 +377,69 @@ class ModelAgnosticMetaLearning(object):
         # self.input_validation = tf.placeholder(dtype=tf.float32, shape=(5, 28, 28, 1))
         # self.input_validation_labels = tf.placeholder(dtype=tf.float32, shape=(5, 5))
 
+        self.grads_and_vars = []
+        self.inner_losses = []
+        self.meta_grads_and_vars = []
+        self.meta_losses = []
+
         self.input_data = input_data_ph
         self.input_labels = input_labels_ph
         self.input_validation = input_validation_ph
         self.input_validation_labels = input_validation_labels_ph
 
-        self.grads_and_vars, self.inner_loss = self._create_inner_model_part(self.input_data, self.input_labels)
-        self.inner_train_op = self._define_inner_train_op(self.inner_loss)
+        data_splits = self._split_data_between_devices()
+        input_data_splits = data_splits[0]
+        input_labels_splits = data_splits[1]
+        input_validation_splits = data_splits[2]
+        input_validation_labels_splits = data_splits[3]
 
-        # grads_stopped = []
-        # for grad_and_var in self.grads:
-        #     if grad_and_var[0] is not None:
-        #         grads_stopped.append((tf.stop_gradient(grad_and_var[0]), grad_and_var[1]))
-        #     else:
-        #         grads_stopped.append((grad_and_var[0], grad_and_var[1]))
+        for device_idx, (device_name, input_data, input_labels) in enumerate(
+                zip(
+                    self.devices,
+                    input_data_splits,
+                    input_labels_splits,
+                )
+        ):
+            with tf.device(device_name):
+                grads_and_vars, inner_loss = self._create_inner_model_part(self.input_data, self.input_labels)
+                self.grads_and_vars.append(grads_and_vars)
+                self.inner_losses.append(inner_loss)
 
-        updated_vars = self._compute_updated_vars(self.grads_and_vars)
-        self.meta_loss = self._create_meta_part(
-            self.input_validation,
-            self.input_validation_labels,
-            updated_vars
+        total_grads_and_vars = average_gradients(self.grads_and_vars)
+
+        self.inner_train_op = self.optimizer.apply_gradients(total_grads_and_vars)
+        tf.summary.scalar(
+            'average inner loss',
+            tf.add_n(self.inner_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
         )
 
-        with tf.variable_scope('meta_optimizer'):
-            self.train_op = self.meta_optimizer.minimize(self.meta_loss)
+        updated_vars = self._compute_updated_vars(total_grads_and_vars)
+        for device_idx, (device_name, input_data, input_labels) in enumerate(
+                zip(
+                    self.devices,
+                    input_validation_splits,
+                    input_validation_labels_splits,
+                )
+        ):
+            with tf.device(device_name):
+                meta_loss = self._create_meta_part(
+                    self.input_validation,
+                    self.input_validation_labels,
+                    updated_vars
+                )
+                self.meta_losses.append(meta_loss)
+                meta_grad_and_vars = self.meta_optimizer.compute_gradients(meta_loss)
+                self.meta_grads_and_vars.append(meta_grad_and_vars)
 
-        # with tf.variable_scope('train_data'):
-        #     tf.summary.image('train', self.input_data, max_outputs=25)
-        #
-        # with tf.variable_scope('validation_data'):
-        #     tf.summary.image('validation', self.input_validation, max_outputs=25)
+        tf.summary.scalar(
+            'average meta loss',
+            tf.add_n(self.meta_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
+        )
+
+        total_meta_grads_and_vars = average_gradients(self.meta_grads_and_vars)
+
+        with tf.variable_scope('meta_optimizer'):
+            self.train_op = self.meta_optimizer.apply_gradients(total_meta_grads_and_vars)
 
         for var in tf.trainable_variables():
             tf.summary.histogram(var.name, var)
@@ -439,9 +472,6 @@ class ModelAgnosticMetaLearning(object):
             if var.name[6:] not in updated_vars.keys():
                 updated_vars[var.name[6:]] = var
         return updated_vars
-
-    def _define_inner_train_op(self, loss):
-        return self.optimizer.minimize(loss)
 
     def _get_gpu_devices(self, num_gpu_devices):
         return ['/gpu:{}'.format(gpu_id) for gpu_id in range(num_gpu_devices)]
@@ -510,7 +540,7 @@ class ModelAgnosticMetaLearning(object):
             # }
 
             inner_loss_value, meta_loss_value, merged_summary, _ = self.sess.run(
-                (self.inner_loss, self.meta_loss, self.merged, self.train_op),
+                (self.inner_losses, self.meta_losses, self.merged, self.train_op),
             )
 
             if it % report_after_x_step == 0:
