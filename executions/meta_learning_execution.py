@@ -116,8 +116,9 @@ def initialize():
             val_data_ph = input_data_ph
             val_labels_ph = input_labels_ph
 
+    network = NeuralNetwork if DATASET == 'omniglot' else C3DNetwork
     maml = ModelAgnosticMetaLearning(
-        C3DNetwork,
+        network,
         input_data_ph,
         input_labels_ph,
         val_data_ph,
@@ -144,7 +145,7 @@ def initialize():
 if __name__ == '__main__':
     maml, loading_dir = initialize()
     if META_TRAIN:
-        if STARTING_POINT_MODEL_ADDRESS:
+        if STARTING_POINT_MODEL_ADDRESS and DATASET != 'omniglot':
             maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
         maml.meta_train(
             num_iterations=NUM_ITERATIONS + 1,

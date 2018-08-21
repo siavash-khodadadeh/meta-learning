@@ -359,7 +359,7 @@ class ModelAgnosticMetaLearning(object):
             num_classes=None,
     ):
         self.devices = self._get_gpu_devices(num_gpu_devices)
-        self.num_gpu_devices = len(self.devices)
+        self.num_gpu_devices = num_gpu_devices
         self.model_cls = model_cls
         # self.meta_learn_rate = self.get_exponential_decay_learning_rate(meta_learn_rate)
         self.meta_learn_rate = meta_learn_rate
@@ -403,7 +403,7 @@ class ModelAgnosticMetaLearning(object):
                 )
         ):
             with tf.device(device_name):
-                grads_and_vars, inner_loss = self._create_inner_model_part(self.input_data, self.input_labels)
+                grads_and_vars, inner_loss = self._create_inner_model_part(input_data, input_labels)
                 self.grads_and_vars.append(grads_and_vars)
                 self.inner_losses.append(inner_loss)
 
@@ -416,7 +416,7 @@ class ModelAgnosticMetaLearning(object):
         )
 
         updated_vars = self._compute_updated_vars(total_grads_and_vars)
-        for device_idx, (device_name, input_data, input_labels) in enumerate(
+        for device_idx, (device_name, validation_data, validation_labels) in enumerate(
                 zip(
                     self.devices,
                     input_validation_splits,
@@ -425,8 +425,8 @@ class ModelAgnosticMetaLearning(object):
         ):
             with tf.device(device_name):
                 meta_loss = self._create_meta_part(
-                    self.input_validation,
-                    self.input_validation_labels,
+                    validation_data,
+                    validation_labels,
                     updated_vars
                 )
                 self.meta_losses.append(meta_loss)
@@ -520,9 +520,9 @@ class ModelAgnosticMetaLearning(object):
 
     def meta_train(self, num_iterations, report_after_x_step, save_after_x_step):
         for it in range(num_iterations):
-            # img, lbl, val_img, val_lbl = self.sess.run(
-            #     (self.input_data, self.input_labels, self.input_validation, self.input_validation_labels)
-            # )
+            img, lbl, val_img, val_lbl = self.sess.run(
+                (self.input_data, self.input_labels, self.input_validation, self.input_validation_labels)
+            )
 
             # if it % 100 == 0:
             #     import matplotlib.pyplot as plt
@@ -537,12 +537,13 @@ class ModelAgnosticMetaLearning(object):
             # feed_dict = {
             #     self.input_data: img,
             #     self.input_labels: lbl,
-            #     self.input_validation: val_img,
-            #     self.input_validation_labels: val_lbl,
+            #     self.input_validation: img,
+            #     self.input_validation_labels: lbl,
             # }
 
             inner_loss_value, meta_loss_value, merged_summary, _ = self.sess.run(
-                (self.inner_losses, self.meta_losses, self.merged, self.train_op),
+                (self.inner_losses, self.meta_losses, self.merged, self.train_op)
+                # ,feed_dict=feed_dict
             )
 
             if it % report_after_x_step == 0:
@@ -581,12 +582,10 @@ class ModelAgnosticMetaLearning(object):
         return outputs
 
     def _split_data_between_devices(self):
-        num_gpu_devices = len(self.devices)
-
-        input_data_splits = tf.split(self.input_data, num_gpu_devices)
-        input_labels_splits = tf.split(self.input_labels, num_gpu_devices)
-        input_validation_splits = tf.split(self.input_validation, num_gpu_devices)
-        input_validation_labels_splits = tf.split(self.input_validation_labels, num_gpu_devices)
+        input_data_splits = tf.split(self.input_data, self.num_gpu_devices)
+        input_labels_splits = tf.split(self.input_labels, self.num_gpu_devices)
+        input_validation_splits = tf.split(self.input_validation, self.num_gpu_devices)
+        input_validation_labels_splits = tf.split(self.input_validation_labels, self.num_gpu_devices)
         return input_data_splits, input_labels_splits, input_validation_splits, input_validation_labels_splits
 
     def _create_model(self, input_data):
