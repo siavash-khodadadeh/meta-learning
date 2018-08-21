@@ -407,13 +407,14 @@ class ModelAgnosticMetaLearning(object):
                 self.grads_and_vars.append(grads_and_vars)
                 self.inner_losses.append(inner_loss)
 
-        total_grads_and_vars = average_gradients(self.grads_and_vars)
+        with tf.device('/cpu:0'):
+            total_grads_and_vars = average_gradients(self.grads_and_vars)
+            self.inner_train_op = self.optimizer.apply_gradients(total_grads_and_vars)
 
-        self.inner_train_op = self.optimizer.apply_gradients(total_grads_and_vars)
-        tf.summary.scalar(
-            'average inner loss',
-            tf.add_n(self.inner_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
-        )
+            tf.summary.scalar(
+                'average inner loss',
+                tf.add_n(self.inner_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
+            )
 
         updated_vars = self._compute_updated_vars(total_grads_and_vars)
         for device_idx, (device_name, validation_data, validation_labels) in enumerate(
@@ -433,18 +434,19 @@ class ModelAgnosticMetaLearning(object):
                 meta_grad_and_vars = self.meta_optimizer.compute_gradients(meta_loss, colocate_gradients_with_ops=True)
                 self.meta_grads_and_vars.append(meta_grad_and_vars)
 
-        tf.summary.scalar(
-            'average meta loss',
-            tf.add_n(self.meta_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
-        )
+        with tf.device('/cpu:0'):
+            tf.summary.scalar(
+                'average meta loss',
+                tf.add_n(self.meta_losses) / tf.cast(tf.constant(self.num_gpu_devices), dtype=tf.float32)
+            )
 
-        total_meta_grads_and_vars = average_gradients(self.meta_grads_and_vars)
+            total_meta_grads_and_vars = average_gradients(self.meta_grads_and_vars)
 
-        with tf.variable_scope('meta_optimizer'):
-            self.train_op = self.meta_optimizer.apply_gradients(total_meta_grads_and_vars)
+            with tf.variable_scope('meta_optimizer'):
+                self.train_op = self.meta_optimizer.apply_gradients(total_meta_grads_and_vars)
 
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.name, var)
+            # for var in tf.trainable_variables():
+            #     tf.summary.histogram(var.name, var)
 
         self.log_dir = self._create_log_dir(log_dir)
         self.file_writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
