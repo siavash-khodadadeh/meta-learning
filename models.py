@@ -395,6 +395,9 @@ class ModelAgnosticMetaLearning(object):
         input_validation_splits = data_splits[2]
         input_validation_labels_splits = data_splits[3]
 
+        with tf.device('/cpu:0'):
+            self.model = self._create_model(input_data_splits[0])
+
         for device_idx, (device_name, input_data, input_labels) in enumerate(
                 zip(
                     self.devices,
