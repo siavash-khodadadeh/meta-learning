@@ -34,7 +34,7 @@ META_TEST_STARTING_MODEL = os.path.join(
     'num-iterations-10000',
     'meta-learning-rate-0.001',
     'learning-rate-0.01',
-    '4000'
+    '-4000'
 )
 
 
