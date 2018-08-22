@@ -3,15 +3,15 @@ import os
 import settings
 
 
-META_TRAIN = True  # true if we want to do meta train otherwise performing meta-test.
+META_TRAIN = False  # true if we want to do meta train otherwise performing meta-test.
 DATASET = 'kinetics'  # from 'kinetics', 'ucf-101', 'omniglot' or 'diva'.
-N = 100  # Train an N-way classifier.
+N = 80  # Train an N-way classifier.
 K = 1  # Train a K-shot learner
 
 NUM_ITERATIONS = 10000
 REPORT_AFTER_STEP = 100
 SAVE_AFTER_STEP = 2000
-BATCH_SIZE = 50  # The batch size.
+BATCH_SIZE = 40  # The batch size.
 META_LEARNING_RATE = 0.001
 LEARNING_RATE = 0.01
 NUM_GPUS = 2  # Number of GPUs to use for training.
@@ -19,7 +19,23 @@ RANDOM_SEED = -1  # Random seed value. Set it to -1 in order not to use a random
 FIRST_OREDER_APPROXIMATION = True
 BATCH_NORMALIZATION = True
 
-META_TEST_STARTING_MODEL = '-10000'
+META_TEST_STARTING_MODEL = os.path.join(
+    'kinetics',
+    'meta-train',
+    'multiple-gpus',
+    'with-first-order-approximation',
+    'with-batch-normalization',
+    '80-way-classifier',
+    '1-shot',
+    'batch-size-40',
+    'num-gpus-2',
+    'random-seed--1',
+    'num-iterations-10000',
+    'meta-learning-rate-0.001',
+    'learning-rate-0.01',
+    '4000'
+)
+
 
 NUM_META_TEST_ITERATIONS = 5
 SAVE_AFTER_META_TEST_STEP = 1

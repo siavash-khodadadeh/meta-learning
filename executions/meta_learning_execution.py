@@ -139,11 +139,11 @@ def initialize():
     if not META_TRAIN:
         print(maml.sess.run(table.export()))
 
-    return maml, os.path.join(settings.SAVED_MODELS_ADDRESS, model_dir)
+    return maml
 
 
 if __name__ == '__main__':
-    maml, loading_dir = initialize()
+    maml = initialize()
     if META_TRAIN:
         if STARTING_POINT_MODEL_ADDRESS and DATASET != 'omniglot':
             maml.load_model(path=STARTING_POINT_MODEL_ADDRESS, load_last_layer=False)
@@ -153,5 +153,5 @@ if __name__ == '__main__':
             save_after_x_step=SAVE_AFTER_STEP
         )
     else:
-        maml.load_model(os.path.join(loading_dir, META_TEST_STARTING_MODEL))
+        maml.load_model(META_TEST_STARTING_MODEL)
         maml.meta_test(NUM_META_TEST_ITERATIONS, save_model_per_x_iterations=SAVE_AFTER_META_TEST_STEP)

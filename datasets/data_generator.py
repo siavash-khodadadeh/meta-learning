@@ -43,7 +43,7 @@ class DataGenerator(object):
         if train:
             folders = self.metatrain_character_folders
             # number of tasks, not number of meta-iterations. (divide by metabatch size to measure)
-            num_total_batches = 200000
+            num_total_batches = 20
         else:
             folders = self.metaval_character_folders
             num_total_batches = 600
