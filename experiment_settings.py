@@ -20,6 +20,7 @@ FIRST_OREDER_APPROXIMATION = True
 BATCH_NORMALIZATION = True
 
 META_TEST_STARTING_MODEL = os.path.join(
+    settings.SAVED_MODELS_ADDRESS,
     'kinetics',
     'meta-train',
     'multiple-gpus',
