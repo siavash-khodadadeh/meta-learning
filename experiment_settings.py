@@ -40,8 +40,8 @@ META_TEST_STARTING_MODEL = os.path.join(
 NUM_META_TEST_ITERATIONS = 5
 SAVE_AFTER_META_TEST_STEP = 1
 
-# STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
-STARTING_POINT_MODEL_ADDRESS = None
+STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
+# STARTING_POINT_MODEL_ADDRESS = None
 
 test_actions = sorted(os.listdir(settings.UCF101_TF_RECORDS_ADDRESS))[-20:]
 
