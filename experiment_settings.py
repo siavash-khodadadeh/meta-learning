@@ -43,7 +43,7 @@ SAVE_AFTER_META_TEST_STEP = 1
 STARTING_POINT_MODEL_ADDRESS = os.path.join(settings.PROJECT_ADDRESS, 'MAML/sports1m_pretrained.model')
 # STARTING_POINT_MODEL_ADDRESS = None
 
-test_actions = sorted(os.listdir(settings.UCF101_TF_RECORDS_ADDRESS))[-20:]
+test_actions = sorted(os.listdir(settings.UCF101_TF_RECORDS_ADDRESS))[-80:]
 
 diva_test_actions = [
     ['activity_carrying', 'Closing', 'Interacts', 'specialized_talking_phone', 'vehicle_turning_left'],
