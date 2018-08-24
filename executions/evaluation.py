@@ -11,7 +11,7 @@ import settings
 
 LOG_DIR = os.path.join(settings.PROJECT_ADDRESS, 'logs/temp/')
 
-SAVED_MODEL_ADDRESS = os.path.join(settings.SAVED_MODELS_ADDRESS, 'meta-test/model/-300')
+SAVED_MODEL_ADDRESS = os.path.join(settings.SAVED_MODELS_ADDRESS, 'newton/-4')
 
 
 TEST_ACTIONS = {
@@ -118,6 +118,90 @@ TEST_ACTIONS = {
 }
 
 
+TEST_ACTIONS = {
+    'YoYo': 79,
+    'UnevenBars': 74,
+    'Typing': 73,
+    'TrampolineJumping': 72,
+    'TableTennisShot': 68,
+    'Surfing': 66,
+    'StillRings': 64,
+    'SoccerPenalty': 63,
+    'VolleyballSpiking': 75,
+    'Skijet': 60,
+    'Skiing': 59,
+    'SkateBoarding': 58,
+    'Shotput': 57,
+    'ShavingBeard': 56,
+    'SalsaSpin': 55,
+    'RockClimbingIndoor': 52,
+    'SoccerJuggling': 62,
+    'Rafting': 51,
+    'RopeClimbing': 53,
+    'Punch': 49,
+    'SumoWrestling': 65,
+    'PullUps': 48,
+    'PoleVault': 46,
+    'TaiChi': 69,
+    'HorseRace': 19,
+    'HighJump': 18,
+    'CuttingInKitchen': 3,
+    'Swing': 67,
+    'HandstandWalking': 16,
+    'FloorGymnastics': 8,
+    'WritingOnBoard': 78,
+    'PommelHorse': 47,
+    'HandstandPushups': 15,
+    'ThrowDiscus': 71,
+    'FrontCrawl': 10,
+    'Rowing': 54,
+    'Hammering': 14,
+    'GolfSwing': 11,
+    'IceDancing': 22,
+    'PushUps': 50,
+    'CliffDiving': 0,
+    'FrisbeeCatch': 9,
+    'HeadMassage': 17,
+    'CricketShot': 2,
+    'HammerThrow': 13,
+    'SkyDiving': 61,
+    'PizzaTossing': 36,
+    'WalkingWithDog': 76,
+    'FieldHockeyPenalty': 7,
+    'PlayingDaf': 38,
+    'Drumming': 5,
+    'Fencing': 6,
+    'JavelinThrow': 23,
+    'Mixing': 32,
+    'Diving': 4,
+    'HulaHoop': 21,
+    'MoppingFloor': 33,
+    'JugglingBalls': 24,
+    'JumpRope': 25,
+    'Nunchucks': 34,
+    'CricketBowling': 1,
+    'JumpingJack': 26,
+    'TennisSwing': 70,
+    'Kayaking': 27,
+    'WallPushups': 77,
+    'Knitting': 28,
+    'Lunges': 30,
+    'ParallelBars': 35,
+    'PlayingDhol': 39,
+    'LongJump': 29,
+    'PlayingPiano': 42,
+    'PlayingCello': 37,
+    'PlayingFlute': 40,
+    'PlayingGuitar': 41,
+    'HorseRiding': 20,
+    'PlayingSitar': 43,
+    'Haircut': 12,
+    'PlayingTabla': 44,
+    'MilitaryParade': 31,
+    'PlayingViolin': 45,
+}
+
+
 # TEST_ACTIONS = {
 #     'StillRings': 4,
 #     'SoccerPenalty': 3,
@@ -198,17 +282,17 @@ def evaluate():
             video_np = maml.sess.run(video)
             video_np = video_np.reshape(1, 16, 112, 112, 3)
 
-            outputs = maml.sess.run(maml.inner_model_out, feed_dict={
+            outputs = maml.sess.run(maml.model.output, feed_dict={
                 maml.input_data: video_np,
             })
 
-            label = np.argmax(outputs, 2)
+            label = np.argmax(outputs)
 
             if label == TEST_ACTIONS[action]:
                 correct += 1
 
             count += 1
-            class_label_counter[label[0][0]] += 1
+            class_label_counter[label] += 1
 
         print(class_label_counter)
         print(np.argmax(class_label_counter))
